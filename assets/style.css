@@ -1,0 +1,58 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-color: azure;
+}
+
+
+.card {
+    margin: 10px;
+    padding: 10px;
+    border-radius: 0;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 15px;
+    margin: 5px 10px;
+    height: 50px;
+}
+
+
+.title p {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    font-weight: bold;
+    font-size: 24px;
+}
+
+.image {
+    height: 50px;
+    object-fit: contain;
+}
+
+#team-dropdown {
+    border: none;
+}
+
+.season-select, .team-selact {
+    padding: 10px;
+    width: 90%;
+}
+
+.season-select {
+    margin-left: 5px;
+}
+
+.season-select Label, .team-selact Label {
+    font-weight: bold;
+    margin: 0 0 5px 5px;
+}
+
+#team-dropdown {
+    width: 85%;
+}
