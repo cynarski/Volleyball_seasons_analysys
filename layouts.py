@@ -14,7 +14,7 @@ def create_header():
                     " VOLLEYBALL SEASON STATS"
                 ])
             ], className="title"),
-            html.Img(src='/assets/logoplusliga.jpg', className='image')
+            html.Img(src='assets/logoplusliga.png', className='image')
         ], className="header")
     ], className="card")
 
@@ -27,9 +27,10 @@ def create_team_dropdown():
             id='team-dropdown',
             options=team_options,
             value=None,
+
             placeholder="Select team",
             clearable=True
-        ), id='team-dropdown'),
+        ), id='team-dropdown-container'),
     ], className="team-selact")
 
 def create_season_dropdown():
@@ -63,6 +64,17 @@ def create_overview_section():
     ], style={'margin-top': '30px'})
 
 
-def team_in_season_alert(season):
-    return dbc.Alert(f"This team didn't play in a leauge at {season} season.", id="alert", color="danger", is_open=False)
+def team_in_season_alert():
+    return dbc.Alert(id="alert", color="danger", is_open=False)
+
+
+def create_match_card(home, away, home_score, away_score):
+    return html.Div([
+        html.Span(home, className="team home"),
+        html.Img(src=f"/assets/teams/{home}.png", className="team-logo"),
+        html.Span(home_score, className="score"),
+        html.Span(away_score, className="score"),
+        html.Img(src=f"/assets/teams/{away}.png", className="team-logo"),
+        html.Span(away, className="team away"),
+    ], className="match")
 

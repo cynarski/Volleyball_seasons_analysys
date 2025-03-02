@@ -4,13 +4,17 @@ services:
     build:
       context: .
     restart: always
-    container_name: "mysql"
+    container_name: "postgres"
     ports:
-      - 3307:3306
+      - 5433:5432
     environment:
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: my_database
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
+      POSTGRES_DB: volleyball_app
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
     volumes:
-      - ./db_data:/var/lib/mysql
+      - pg_data:/var/lib/postgresql/data
+
+volumes:
+  pg_data:
+    driver: local
+

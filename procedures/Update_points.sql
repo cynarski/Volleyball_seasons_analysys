@@ -1,10 +1,10 @@
-DROP PROCEDURE IF EXISTS Update_points;
+DROP PROCEDURE IF EXISTS Update_points();
 
-DELIMITER //
-
-CREATE PROCEDURE Update_points()
+CREATE PROCEDURE Update_points() 
+LANGUAGE plpgsql
+AS $$
 BEGIN
-	UPDATE Matches
+    UPDATE Matches
     SET
         T1_points = CASE
             WHEN T1_score > T2_score AND T1_score - T2_score != 1 THEN 3
@@ -21,8 +21,5 @@ BEGIN
             ELSE T2_points
         END
     WHERE T1_points IS NULL OR T2_points IS NULL;
-END//
-
-DELIMITER;
-
-CALL Update_points();
+END;
+$$;
