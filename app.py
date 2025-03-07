@@ -1,5 +1,3 @@
-from turtledemo.penrose import start
-
 from dash import Dash, html, dcc, Output, Input
 
 import dash_bootstrap_components as dbc
@@ -154,11 +152,9 @@ def show_wins_and_losses(team, season):
     result_map = {"3:0": 5, "3:1": 4, "3:2": 3, "2:3": 2, "1:3": 1, "0:3": 0}
     y_values = [result_map[m["result"]] for m in formatted_matches]
 
-    # Tworzenie wykresu
     fig = go.Figure()
 
     for match, y in zip(formatted_matches, y_values):
-        # Kolor punktu (zielony - wygrana, czerwony - przegrana)
         color = "green" if match["winner"] else "red"
         if len(match['sets']) > 0:
             hover_text = f"""
@@ -203,7 +199,6 @@ def show_wins_and_losses(team, season):
 
     fig.update_layout(showlegend=False)
 
-    # Wyświetlenie wykresu
     return dcc.Graph(figure=fig)
 
 
