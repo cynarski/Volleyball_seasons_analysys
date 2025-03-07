@@ -38,7 +38,7 @@ def create_season_dropdown():
 
     marks = {idx: season for idx, season in enumerate(seasons) if idx % 2 == 1 and idx != 1 or idx == 0}
     return dbc.Col([
-        dbc.Row(html.Label("Select seson to review")),
+        dbc.Row(html.Label("Select season to review")),
         dbc.Row([
             dcc.Slider(
             id='season-slider',

@@ -6,7 +6,7 @@ services:
     restart: always
     container_name: "postgres"
     ports:
-      - 5433:5432
+      - 1234:5432
     environment:
       POSTGRES_DB: volleyball_app
       POSTGRES_USER: user

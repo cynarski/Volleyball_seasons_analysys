@@ -3,6 +3,7 @@ DROP VIEW IF EXISTS Teams_matches_in_season;
 CREATE VIEW Teams_matches_in_season AS
 SELECT
     m.date,
+    m.match_id,
     s.season AS season,
     t.TeamName AS team_1,
     ti.TeamName AS team_2,
