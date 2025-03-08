@@ -1,5 +1,3 @@
-from cProfile import label
-
 from dash import  html, dcc
 import dash_bootstrap_components as dbc
 

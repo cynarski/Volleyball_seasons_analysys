@@ -1,15 +1,12 @@
-from dash import Dash, html, dcc, Output, Input
-
+from dash import Dash, html, dcc, Output, Input, no_update
 import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
-import plotly.graph_objects as go
 
-from db_requests import get_seasons, check_team_in_season, get_matches_for_team_and_season, get_wins_and_losses, get_sets_scores
+from db_requests import get_seasons, check_team_in_season, get_matches_for_team_and_season, get_sets_scores
 from layouts import create_header, create_team_dropdown, create_season_dropdown, team_in_season_alert, create_match_card
 from utils import format_match_result
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.FONT_AWESOME], assets_folder='assets')
-
 
 app.layout = html.Div([
     create_header(),
@@ -17,9 +14,6 @@ app.layout = html.Div([
         dbc.Col([create_team_dropdown()]),
         dbc.Col([create_season_dropdown()])
     ]),
-    # html.Div([
-    #     create_overview_section(),
-    # ]),
     team_in_season_alert(),
 
     dbc.Row([
@@ -27,10 +21,11 @@ app.layout = html.Div([
         dbc.Col([html.Div(id="pie-chart", className="equal-height")], width=6)
     ]),
     dbc.Row([
-        dbc.Col([html.Div(id="wins-and-losses", className="equal-height")], width=12)
-])
-])
+        dbc.Col([dcc.Graph(id="wins-and-losses", className="equal-height")], width=12)
+    ]),
 
+    dcc.Tooltip(id="graph-tooltip"),
+])
 
 @app.callback(
     Output("alert", "children"),
@@ -49,7 +44,6 @@ def show_team(team, idx):
         return f"Team {team} did not play at season {selected_season}.", True
 
     return "", False
-
 
 
 @app.callback(
@@ -85,7 +79,6 @@ def matches_scores(team, season):
     return None
 
 
-
 @app.callback(
     Output('pie-chart', 'children'),
     Input('team-dropdown', 'value'),
@@ -109,13 +102,11 @@ def pie_chart(team, season):
         losses = len(matches) - wins
 
         fig = go.Figure(
-            data=[
-                go.Pie(
-                    labels=["Wins", "Losses"],
-                    values=[wins, losses],
-                    marker=dict(colors=["#1f77b4", "#ff7f0e"]),
-                )
-            ]
+            data=[go.Pie(
+                labels=["Wins", "Losses"],
+                values=[wins, losses],
+                marker=dict(colors=["#1f77b4", "#ff7f0e"]),
+            )]
         )
 
         fig.update_layout(title=f"Wyniki {team} w sezonie {selected_season}")
@@ -123,23 +114,23 @@ def pie_chart(team, season):
 
         return dcc.Graph(figure=fig)
 
+
 @app.callback(
-    Output('wins-and-losses', 'children'),
+    Output('wins-and-losses', 'figure'),
     Input('team-dropdown', 'value'),
     Input('season-slider', 'value'),
 )
 def show_wins_and_losses(team, season):
 
     if not team or season is None:
-        return None
+        return {}
 
     seasons = get_seasons()
     selected_season = seasons[season]
 
-    matches_scores = get_matches_for_team_and_season(team, selected_season,match_id=True, date=True)
+    matches_scores = get_matches_for_team_and_season(team, selected_season, match_id=True, date=True)
 
     set_scores = []
-
     for match in matches_scores:
         result = get_sets_scores(match[0])
         set_scores.append(result)
@@ -156,31 +147,19 @@ def show_wins_and_losses(team, season):
 
     for match, y in zip(formatted_matches, y_values):
         color = "green" if match["winner"] else "red"
-        if len(match['sets']) > 0:
-            hover_text = f"""
-            <img src={match["logo"]} style='width:50px;height:50px;'><br>
-            <b>{match['team']}</b><br>
-            <b style='font-size:20px;'>{match['result']}</b><br>
-            Set 1: {match['sets'][0][0]} : {match['sets'][0][1]}<br>
-            Set 2: {match['sets'][1][0]} : {match['sets'][1][1]}<br>
-            Set 3: {match['sets'][2][0]} : {match['sets'][2][1]}<br>
-            {match['date']}
-            """
-
+        print(match)
         fig.add_trace(go.Scatter(
             x=[match["round"]],
             y=[y],
             mode="markers",
             marker=dict(size=12, color=color),
-            text=[hover_text],
-            hoverinfo="text",
-            hoverlabel=dict(align="left"),
+            customdata=[[match["logo"], match["team"], match["result"], match["date"], match['sets']]],
         ))
 
     fig.update_yaxes(
         tickvals=list(result_map.values()),
         ticktext=list(result_map.keys()),
-        title="Wyniki",
+        title="Result",
         showgrid=True
     )
 
@@ -193,13 +172,60 @@ def show_wins_and_losses(team, season):
     fig.update_layout(
         title="Matches Results",
         plot_bgcolor="white",
-        height=450,
-        width=1780
+        height=500
     )
 
     fig.update_layout(showlegend=False)
 
-    return dcc.Graph(figure=fig)
+    return fig
+
+
+@app.callback(
+    Output("graph-tooltip", "show"),
+    Output("graph-tooltip", "bbox"),
+    Output("graph-tooltip", "children"),
+    Input("wins-and-losses", "hoverData"),
+)
+def display_hover(hoverData):
+    if hoverData is None:
+        return False, no_update, no_update
+
+    pt = hoverData["points"][0]
+    bbox = pt["bbox"]
+
+    custom_data = pt["customdata"]
+    logo_url = custom_data[0]
+    team_name = custom_data[1]
+    result = custom_data[2]
+    match_date = custom_data[3]
+    sets = custom_data[4]
+    print(sets)
+    set_details = [html.P(f"Set {i + 1}: {score[0]} : {score[1]}", style={"text-align": "center"})
+                   for i, score in enumerate(sets)]
+
+    children = [
+        html.Div([
+            html.Img(
+                src=logo_url,
+                style={"width": "60px", "display": "block", "margin": "auto"}
+            ),
+            html.H2(
+                f"{team_name}",
+                style={"color": "darkblue", "overflow-wrap": "break-word", "font-size": "15px", "text-align": "center"}
+            ),
+            html.P(
+                f"Result: {result}",
+                style={"text-align": "center"}
+            ),
+            html.P(
+                f"Date: {match_date}",
+                style={"text-align": "center", "color": "gray", "font-size": "12px"}
+            ),
+            html.Div(set_details)
+        ], style={'width': '200px', 'white-space': 'normal'})
+    ]
+
+    return True, bbox, children
 
 
 if __name__ == '__main__':
