@@ -16,7 +16,6 @@ def format_match_result(match, set_scores, team, round):
     opponent = team_1_name if team_1_name != team else team_2_name
 
     sets = [(set_1_score, set_2_score) for set_1_score, set_2_score in set_scores]
-    print(winner == team, result)
     return {
         "round": round,
         "result": result,

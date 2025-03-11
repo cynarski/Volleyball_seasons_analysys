@@ -2,7 +2,7 @@ from dash import Dash, html, dcc, Output, Input, no_update
 import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
 
-from db_requests import get_seasons, check_team_in_season, get_matches_for_team_and_season, get_sets_scores
+from db_requests import get_seasons, check_team_in_season, get_matches_for_team_and_season, get_sets_scores, get_home_and_away_stats
 from layouts import create_header, create_team_dropdown, create_season_dropdown, team_in_season_alert, create_match_card
 from utils import format_match_result
 
@@ -25,6 +25,11 @@ app.layout = html.Div([
     ]),
 
     dcc.Tooltip(id="graph-tooltip"),
+
+dbc.Row([
+        dbc.Col([html.Div(id="match_results", className="equal-height")], width=6),
+        dbc.Col([html.Div(id="table", className="equal-height")], width=6)
+    ]),
 ])
 
 @app.callback(
@@ -147,7 +152,6 @@ def show_wins_and_losses(team, season):
 
     for match, y in zip(formatted_matches, y_values):
         color = "green" if match["winner"] else "red"
-        print(match)
         fig.add_trace(go.Scatter(
             x=[match["round"]],
             y=[y],
@@ -199,7 +203,7 @@ def display_hover(hoverData):
     result = custom_data[2]
     match_date = custom_data[3]
     sets = custom_data[4]
-    print(sets)
+
     set_details = [html.P(f"Set {i + 1}: {score[0]} : {score[1]}", style={"text-align": "center"})
                    for i, score in enumerate(sets)]
 
@@ -226,6 +230,105 @@ def display_hover(hoverData):
     ]
 
     return True, bbox, children
+
+
+@app.callback(
+    Output('match_results', 'children'),
+    Input('team-dropdown', 'value'),
+    Input('season-slider', 'value'),
+)
+def match_results(team, season):
+    if not team or season is None:
+        return None
+
+    seasons = get_seasons()
+    selected_season = seasons[season]
+
+    if not check_team_in_season(team, selected_season):
+        return html.P("This team didn't play in the selected season.", style={"color": "gray"})
+
+    matches = get_matches_for_team_and_season(team, selected_season)
+
+    if not matches:
+        return html.P("Don't have data about matches.", style={"color": "gray"})
+
+    data = get_home_and_away_stats(team, selected_season)
+
+    if not data or len(data) < 4:
+        return html.P("No sufficient data for statistics.", style={"color": "gray"})
+
+    x_labels = ["Home Wins", "Home Losses", "Away Wins", "Away Losses"]
+
+    fig = go.Figure()
+
+    fig.add_trace(
+        go.Pie(
+            labels=x_labels,
+            values=[data[0], data[1], data[2], data[3]],
+            name="Pie Chart",
+            visible=True
+        )
+    )
+
+    fig.add_trace(
+        go.Bar(
+            x=x_labels,
+            y=[data[0], data[1], data[2], data[3]],
+            name="Bar Chart",
+            visible=False
+        )
+    )
+
+    fig.update_layout(
+        updatemenus=[
+            {
+                "buttons": [
+                    {"label": "Pie Chart", "method": "update", "args": [
+                        {"visible": [True, False]},
+                        {"xaxis": {"visible": False}, "yaxis": {"visible": False}}
+                    ]},
+                    {"label": "Bar Chart", "method": "update", "args": [
+                        {"visible": [False, True]},
+                        {"xaxis": {"visible": True}, "yaxis": {"visible": True}}
+                    ]},
+                ],
+                "direction": "down",
+                "showactive": True,
+                "x": 1,
+                "y": 0.5,
+                "xanchor": "left",
+                "yanchor": "middle",
+            }
+        ],
+        title=f"{team} Wins and Losses (Home & Away) - Season {selected_season}",
+        height=450,
+        plot_bgcolor="white",
+        paper_bgcolor="white",
+        font=dict(color="black"),
+    )
+
+    fig.update_layout(
+        xaxis=dict(
+            showgrid=True,
+            zeroline=True,
+            visible=True,
+            title="Match Results"
+        ),
+        yaxis=dict(
+            showgrid=True,
+            zeroline=True,
+            visible=True,
+            title="Count"
+        ),
+    )
+
+    fig.update_layout(
+        xaxis=dict(showgrid=False, zeroline=False, visible=False),
+        yaxis=dict(showgrid=False, zeroline=False, visible=False),
+    )
+
+    return dcc.Graph(figure=fig)
+
 
 
 if __name__ == '__main__':

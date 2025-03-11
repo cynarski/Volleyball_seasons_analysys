@@ -167,3 +167,9 @@ body {
 
 }
 
+#match_results {
+    width: 90%;
+    box-shadow: 2px 2px 15px rgba(0, 0, 0, 0.1);
+    margin-top: 10px;
+    margin-left: 30px;
+}

@@ -8,6 +8,6 @@ BEGIN
 		COUNT(*) FILTER (WHERE (team_2 = p_team AND T1_score < T2_score)) AS wins_away,
         COUNT(*) FILTER (WHERE (team_2 = p_team AND T1_score > T2_score)) AS losses_away
     FROM teams_matches_in_season
-    WHERE season = p_season AND (team_1 = p_team OR team_2 = p_team);
+    WHERE season = p_season AND (team_1 = p_team OR team_2 = p_team) AND match_type = 'league';
 END;
-$$ LANGUAGE plpgsql;
+LANGUAGE plpgsql;

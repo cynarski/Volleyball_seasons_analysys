@@ -38,7 +38,7 @@ def get_matches_for_team_and_season(team, season, match_id=False, date=False):
     cursor = conn.cursor()
 
     query = f"""SELECT {'id,' if match_id else '' } {'date,' if date else '' } team_1, team_2, T1_score, T2_score FROM Teams_matches_in_season
-                    WHERE (team_1 = '{team}' OR team_2 = '{team}') AND season = '{season}' ORDER BY date;"""
+                WHERE (team_1 = '{team}' OR team_2 = '{team}') AND season = '{season}' AND match_type = 'league' ORDER BY date;"""
 
 
     cursor.execute(query)
@@ -67,3 +67,14 @@ def get_sets_scores(match_id):
     cursor.close()
 
     return result
+
+
+def get_home_and_away_stats(team, season):
+    conn = db.get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(f"""SELECT * FROM count_home_and_away_stats('{team}', '{season}');""")
+    result = cursor.fetchall()
+    cursor.close()
+
+    return result[0]

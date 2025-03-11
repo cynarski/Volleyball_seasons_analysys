@@ -101,3 +101,6 @@ CREATE TABLE IF NOT EXISTS Set_scores (
   guest_score INT NOT NULL,
   FOREIGN KEY (match_id) REFERENCES Matches(id) ON DELETE CASCADE
 );
+
+
+ALTER TABLE matches ADD COLUMN match_type VARCHAR(10);
