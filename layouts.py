@@ -1,7 +1,7 @@
 from dash import  html, dcc
 import dash_bootstrap_components as dbc
 
-from db_requests import get_teams_name, get_seasons, check_team_in_season
+from db_requests import get_teams_name, get_seasons
 
 def create_header():
     return dbc.Card([
@@ -43,8 +43,8 @@ def create_season_dropdown():
             min=0,
             max=len(seasons) - 1,
             marks=marks,
-            value=len(seasons) - 1,
-            step=1
+            value=None,
+            step=1,
         )])
 
     ], className="season-select")
@@ -76,3 +76,11 @@ def create_match_card(home, away, home_score, away_score):
         html.Span(away, className="team away"),
     ], className="match")
 
+
+def create_season_table(place, team, points):
+    return html.Div([
+        html.Span(place, className="place"),
+        html.Img(src=f"/assets/teams/{team}.png", className="team-logo"),
+        html.Span(team, className="team-name"),  # Pełna nazwa drużyny
+        html.Span(points, className="points"),
+    ], className="table")

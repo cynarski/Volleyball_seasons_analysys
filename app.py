@@ -2,8 +2,8 @@ from dash import Dash, html, dcc, Output, Input, no_update
 import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
 
-from db_requests import get_seasons, check_team_in_season, get_matches_for_team_and_season, get_sets_scores, get_home_and_away_stats
-from layouts import create_header, create_team_dropdown, create_season_dropdown, team_in_season_alert, create_match_card
+from db_requests import get_seasons, check_team_in_season, get_matches_for_team_and_season, get_sets_scores, get_home_and_away_stats, get_season_table
+from layouts import create_header, create_team_dropdown, create_season_dropdown, team_in_season_alert, create_match_card, create_season_table
 from utils import format_match_result
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.FONT_AWESOME], assets_folder='assets')
@@ -26,10 +26,10 @@ app.layout = html.Div([
 
     dcc.Tooltip(id="graph-tooltip"),
 
-dbc.Row([
-        dbc.Col([html.Div(id="match_results", className="equal-height")], width=6),
-        dbc.Col([html.Div(id="table", className="equal-height")], width=6)
-    ]),
+    dbc.Row([
+            dbc.Col([html.Div(id="match_results", className="equal-height")], width=6),
+            dbc.Col([html.Div(id="season_list", className="equal-height")], width=6)
+        ]),
 ])
 
 @app.callback(
@@ -328,6 +328,36 @@ def match_results(team, season):
     )
 
     return dcc.Graph(figure=fig)
+
+
+@app.callback(
+    Output('season_list', 'children'),
+    Input('season-slider', 'value'),
+)
+def season_table(season):
+    if season is None:
+        return None
+
+    seasons = get_seasons()
+    selected_season = seasons[season]
+
+    results = get_season_table(selected_season)
+
+    if not results:
+        return html.P("No matches data", style={"color": "gray"})
+
+    return html.Div(
+        [
+            html.Div(
+                [
+                    create_season_table(place, team, points)
+                    for place, team, points in results
+                ],
+                className="scrollable-list"
+            )
+        ]
+    )
+
 
 
 

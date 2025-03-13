@@ -78,3 +78,24 @@ def get_home_and_away_stats(team, season):
     cursor.close()
 
     return result[0]
+
+def get_season_table(season):
+    conn = db.get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        f"""
+        SELECT 
+            t.TeamName,
+            COALESCE(cp.points, 0) AS total_points
+        FROM Teams_in_single_season t
+        LEFT JOIN LATERAL Count_points(t.TeamName, t.season) AS cp ON true
+        WHERE season = '{season}'
+        ORDER BY total_points DESC;
+    """)
+    result = cursor.fetchall()
+    cursor.close()
+
+    ranked_result = [(i + 1, team, points) for i, (team, points) in enumerate(result)]
+
+    return ranked_result
