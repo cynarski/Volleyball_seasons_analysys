@@ -21,7 +21,7 @@ app.layout = html.Div([
         dbc.Col([html.Div(id="pie-chart", className="equal-height")], width=6)
     ]),
     dbc.Row([
-        dbc.Col([dcc.Graph(id="wins-and-losses", className="equal-height")], width=12)
+        dbc.Col([dcc.Graph(id="wins-and-losses", className="equal-height", clear_on_unhover=True)], width=12)
     ]),
 
     dcc.Tooltip(id="graph-tooltip"),
@@ -31,6 +31,8 @@ app.layout = html.Div([
             dbc.Col([html.Div(id="season_list", className="equal-height")], width=6)
         ]),
 ])
+
+
 
 @app.callback(
     Output("alert", "children"),
