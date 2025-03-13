@@ -69,7 +69,6 @@ body {
     width: 93%;
     margin: 75px 20px 75px 30px;
     box-shadow: 2px 2px 15px rgba(0, 0, 0, 0.2);
-    /*background-color: transparent;*/
 }
 
 
@@ -186,6 +185,7 @@ body {
     box-shadow: 2px 2px 15px rgba(0, 0, 0, 0.1);
     margin-top: 10px;
     margin-left: 30px;
+    margin-bottom: 30px;
 }
 
 .place {
@@ -218,4 +218,54 @@ body {
     margin-top: 10px;
     margin-left: -30px;
 
+}
+.scrollable-list {
+    position: relative;
+    overflow-y: auto;
+    max-height: 450px;
+    border: 1px solid #eee;
+}
+
+.sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: #f0f0f0;
+    font-weight: bold;
+    border-bottom: 2px solid #ddd;
+}
+
+.table {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.place {
+    width: 40px;
+    text-align: center;
+}
+
+.team-logo, .team-logo-placeholder {
+    width: 30px;
+    margin-right: 10px;
+}
+
+.team-name {
+    flex-grow: 1;
+}
+
+.points {
+    width: 50px;
+    text-align: right;
+    font-weight: bold;
+}
+
+#team_name {
+    margin-left: 70px;
+}
+
+#place {
+    margin-left: 20px;
 }

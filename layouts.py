@@ -34,7 +34,7 @@ def create_team_dropdown():
 def create_season_dropdown():
     seasons = get_seasons()
 
-    marks = {idx: season for idx, season in enumerate(seasons) if idx % 2 == 1 and idx != 1 or idx == 0}
+    marks = {idx: season for idx, season in enumerate(seasons)}
     return dbc.Col([
         dbc.Row(html.Label("Select season to review")),
         dbc.Row([
@@ -77,10 +77,17 @@ def create_match_card(home, away, home_score, away_score):
     ], className="match")
 
 
+def create_season_table_header():
+    return html.Div([
+        html.Span("Lp.", id="place"),
+        html.Span("Team", id="team_name"),
+        html.Span("Pkt", className="points"),
+    ], className="table-header sticky-header")
+
 def create_season_table(place, team, points):
     return html.Div([
         html.Span(place, className="place"),
         html.Img(src=f"/assets/teams/{team}.png", className="team-logo"),
-        html.Span(team, className="team-name"),  # Pełna nazwa drużyny
+        html.Span(team, className="team-name"),
         html.Span(points, className="points"),
     ], className="table")

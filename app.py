@@ -3,7 +3,7 @@ import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
 
 from db_requests import get_seasons, check_team_in_season, get_matches_for_team_and_season, get_sets_scores, get_home_and_away_stats, get_season_table
-from layouts import create_header, create_team_dropdown, create_season_dropdown, team_in_season_alert, create_match_card, create_season_table
+from layouts import create_header, create_team_dropdown, create_season_dropdown, team_in_season_alert, create_match_card, create_season_table, create_season_table_header
 from utils import format_match_result
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.FONT_AWESOME], assets_folder='assets')
@@ -122,13 +122,14 @@ def pie_chart(team, season):
 
 @app.callback(
     Output('wins-and-losses', 'figure'),
+    Output('wins-and-losses', 'style'),
     Input('team-dropdown', 'value'),
     Input('season-slider', 'value'),
 )
 def show_wins_and_losses(team, season):
 
     if not team or season is None:
-        return {}
+        return go.Figure(), {'display': 'none'}
 
     seasons = get_seasons()
     selected_season = seasons[season]
@@ -157,7 +158,7 @@ def show_wins_and_losses(team, season):
             y=[y],
             mode="markers",
             marker=dict(size=12, color=color),
-            customdata=[[match["logo"], match["team"], match["result"], match["date"], match['sets']]],
+            customdata=[[match["logo"], match["team"], match["result"], match["date"], match['sets']]],  # Przygotowanie danych do tooltip
         ))
 
     fig.update_yaxes(
@@ -181,7 +182,7 @@ def show_wins_and_losses(team, season):
 
     fig.update_layout(showlegend=False)
 
-    return fig
+    return fig, {'display': 'block'}
 
 
 @app.callback(
@@ -346,18 +347,21 @@ def season_table(season):
     if not results:
         return html.P("No matches data", style={"color": "gray"})
 
+    table_items = [create_season_table_header()]
+
+    table_items.extend([
+        create_season_table(place, team, points)
+        for place, team, points in results
+    ])
+
     return html.Div(
         [
             html.Div(
-                [
-                    create_season_table(place, team, points)
-                    for place, team, points in results
-                ],
+                table_items,
                 className="scrollable-list"
             )
         ]
     )
-
 
 
 
