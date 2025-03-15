@@ -6486,8 +6486,3 @@ INSERT INTO public.set_scores VALUES (8420, 1334, 5, 15, 11);
 INSERT INTO public.set_scores VALUES (8421, 1333, 1, 25, 14);
 INSERT INTO public.set_scores VALUES (8422, 1333, 2, 25, 19);
 INSERT INTO public.set_scores VALUES (8423, 1333, 3, 25, 17);
-
-
-
-CALL Update_points();
-CALL Update_match_type();

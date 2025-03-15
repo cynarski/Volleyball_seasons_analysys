@@ -11,7 +11,7 @@ SELECT
     m.T2_score,
     m.T1_points,
     m.T2_points,
-    m.winner
+    m.winner,
     m.match_type
 FROM Matches m
 JOIN Season s ON m.season = s.id

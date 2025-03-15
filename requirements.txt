@@ -4,6 +4,5 @@ dash_bootstrap_components
 numpy
 pandas
 plotly
-pymysql
 psycopg2-binary
 

@@ -10,4 +10,4 @@ BEGIN
     FROM teams_matches_in_season
     WHERE season = p_season AND (team_1 = p_team OR team_2 = p_team) AND match_type = 'league';
 END;
-LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
