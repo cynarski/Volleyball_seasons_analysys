@@ -9,5 +9,6 @@ psql -U user -d volleyball_app -f /docker-entrypoint-initdb.d/Update_points.sql
 psql -U user -d volleyball_app -f /docker-entrypoint-initdb.d/Update_match_type.sql
 psql -U user -d volleyball_app -f /docker-entrypoint-initdb.d/Count_home_and_away_stats.sql
 psql -U user -d volleyball_app -f /docker-entrypoint-initdb.d/Count_wins_and_loses.sql
+psql -U user -d volleyball_app -f /docker-entrypoint-initdb.d/Count_points.sql
 psql -U user -d volleyball_app -f /docker-entrypoint-initdb.d/insert_data.sql
 

@@ -1,4 +1,4 @@
-DROP PROCEDURE IF EXIST Update_match_type();
+DROP PROCEDURE IF EXISTS Update_match_type();
 
 CREATE OR REPLACE PROCEDURE Update_match_type()
 LANGUAGE plpgsql
@@ -23,6 +23,3 @@ BEGIN
     WHERE m.id = mp.id AND mp.match_number <= 2;
 END;
 $$
-
-
-CALL Update_match_type();

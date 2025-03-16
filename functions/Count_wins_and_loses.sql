@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION count_wins_and_losses(p_team VARCHAR, p_season VARCHAR)
+CREATE OR REPLACE FUNCTION count_wins_and_loses(p_team VARCHAR, p_season VARCHAR)
 RETURNS TABLE(wins BIGINT, losses BIGINT) AS $$
 BEGIN
     RETURN QUERY

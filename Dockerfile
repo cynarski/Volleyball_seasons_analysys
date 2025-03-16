@@ -5,6 +5,7 @@ COPY procedures/Update_points.sql /docker-entrypoint-initdb.d/
 COPY procedures/Update_match_type.sql /docker-entrypoint-initdb.d/
 COPY functions/Count_home_and_away_stats.sql /docker-entrypoint-initdb.d/
 COPY functions/Count_wins_and_loses.sql /docker-entrypoint-initdb.d/
+COPY functions/Count_points.sql /docker-entrypoint-initdb.d/
 COPY views/Teams_in_single_season.sql /docker-entrypoint-initdb.d/
 COPY views/Teams_matches_in_season.sql /docker-entrypoint-initdb.d/
 
