@@ -1,4 +1,5 @@
 import psycopg2
+from psycopg2 import pool
 
 class DatabaseConnector:
     _instance = None
@@ -11,23 +12,29 @@ class DatabaseConnector:
 
     def _connect(self):
         try:
-            self.conn = psycopg2.connect(
+            self.connection_pool = psycopg2.pool.SimpleConnectionPool(
+                minconn=1,
+                maxconn=50,
                 user='user',
                 password='password',
                 database='volleyball_app',
                 host='localhost',
                 port=1234,
             )
-            print("Connected to database")
+            print("Connected to database with connection pool")
         except Exception as e:
             print(f"Error with database connection: {e}")
-            self.conn = None
+            self.connection_pool = None
 
     def get_connection(self):
-        try:
-            if self.conn is None or self.conn.closed != 0:
-                self._connect()
-            return self.conn
-        except Exception as e:
-            print(f"Error with reconnecting: {e}")
-            return None
+        if self.connection_pool is None:
+            self._connect()
+        return self.connection_pool.getconn()
+
+    def release_connection(self, conn):
+        if self.connection_pool and conn:
+            self.connection_pool.putconn(conn)
+
+    def close_pool(self):
+        if self.connection_pool:
+            self.connection_pool.closeall()

@@ -5,97 +5,122 @@ from database_connector import DatabaseConnector
 db = DatabaseConnector()
 
 def get_teams_name() -> List[Dict[str, str]]:
+    query = "SELECT TeamName FROM Team ORDER BY TeamName;"
+
     conn = db.get_connection()
-    cursor = conn.cursor()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(query)
+            return [{'label': row[0], 'value': row[0]} for row in cursor.fetchall()]
+    finally:
+        db.release_connection(conn)
 
-    cursor.execute("SELECT TeamName FROM Team ORDER BY TeamName;")
-    teams = [{'label': row[0], 'value': row[0]} for row in cursor.fetchall()]
-    cursor.close()
-    return teams
-
-def get_seasons() -> List:
+def get_seasons() -> List[str]:
+    query = "SELECT season FROM Season ORDER BY season;"
     conn = db.get_connection()
-    cursor = conn.cursor()
 
-    cursor.execute("SELECT season FROM Season ORDER BY season;")
-    seasons = [row[0] for row in cursor.fetchall()]
-    cursor.close()
-    return seasons
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(query)
+            return [row[0] for row in cursor.fetchall()]
+    finally:
+        db.release_connection(conn)
 
-def check_team_in_season(team, season) -> Tuple:
+def check_team_in_season(team: str, season: str) -> List[Tuple]:
+    query = "SELECT * FROM teams_in_single_season WHERE TeamName = %s AND season = %s;"
+
     conn = db.get_connection()
-    cursor = conn.cursor()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(query, (team, season))
+            return cursor.fetchall()
+    finally:
+        db.release_connection(conn)
 
-    cursor.execute(f"SELECT * FROM teams_in_single_season WHERE TeamName = '{team}' AND season = '{season}';")
 
-    result = cursor.fetchall()
-    cursor.close()
-    return result
+def get_matches_for_team_and_season(team: str, season: str, match_id=False, date=False) -> List[Tuple]:
 
+    fields = []
+    if match_id:
+        fields.append("id")
+    if date:
+        fields.append("date")
+    fields.extend(["team_1", "team_2", "T1_score", "T2_score"])
 
-def get_matches_for_team_and_season(team, season, match_id=False, date=False):
+    query = f"""
+        SELECT {", ".join(fields)}
+        FROM Teams_matches_in_season
+        WHERE (team_1 = %s OR team_2 = %s) 
+            AND season = %s 
+            AND match_type = 'league'
+        ORDER BY date;
+    """
+
     conn = db.get_connection()
-    cursor = conn.cursor()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(query, (team, team, season))
+            return cursor.fetchall()
+    finally:
+        db.release_connection(conn)
 
-    query = f"""SELECT {'id,' if match_id else '' } {'date,' if date else '' } team_1, team_2, T1_score, T2_score FROM Teams_matches_in_season
-                WHERE (team_1 = '{team}' OR team_2 = '{team}') AND season = '{season}' AND match_type = 'league' ORDER BY date;"""
+def get_wins_and_losses(team: str, season: str) -> Tuple:
+    query = "SELECT * FROM count_wins_and_losses(%s, %s);"
 
-
-    cursor.execute(query)
-    result = cursor.fetchall()
-
-    cursor.close()
-    return result
-
-
-def get_wins_and_losses(team, season):
     conn = db.get_connection()
-    cursor = conn.cursor()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(query, (team, season))
+            return cursor.fetchone()
+    finally:
+        db.release_connection(conn)
 
-    cursor.execute(f"""SELECT * FROM count_wins_and_losses('{team}', '{season}');""")
-    result = cursor.fetchall()
-    cursor.close()
+def get_sets_scores(match_id: int) -> List[Tuple[int, int]]:
+    query = "SELECT host_score, guest_score FROM set_scores WHERE match_id = %s;"
 
-    return result
-
-def get_sets_scores(match_id):
     conn = db.get_connection()
-    cursor = conn.cursor()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(query, (match_id,))
+            return cursor.fetchall()
+    finally:
+        db.release_connection(conn)
 
-    cursor.execute(f"""SELECT host_score, guest_score FROM set_scores WHERE match_id = '{match_id}';""")
-    result = cursor.fetchall()
-    cursor.close()
-
-    return result
 
 
-def get_home_and_away_stats(team, season):
+def get_home_and_away_stats(team: str, season: str) -> Tuple:
+    query = "SELECT * FROM count_home_and_away_stats(%s, %s);"
+
     conn = db.get_connection()
-    cursor = conn.cursor()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(query, (team, season))
+            result = cursor.fetchone()
+            return result
+    finally:
+        db.release_connection(conn)
 
-    cursor.execute(f"""SELECT * FROM count_home_and_away_stats('{team}', '{season}');""")
-    result = cursor.fetchall()
-    cursor.close()
 
-    return result[0]
 
-def get_season_table(season):
-    conn = db.get_connection()
-    cursor = conn.cursor()
+def get_season_table(season: str) -> List[Tuple[int, str, int]]:
 
-    cursor.execute(
-        f"""
+    query = """
         SELECT 
             t.TeamName,
             COALESCE(cp.points, 0) AS total_points
         FROM Teams_in_single_season t
         LEFT JOIN LATERAL Count_points(t.TeamName, t.season) AS cp ON true
-        WHERE season = '{season}'
+        WHERE season = %s
         ORDER BY total_points DESC;
-    """)
-    result = cursor.fetchall()
-    cursor.close()
+    """
 
-    ranked_result = [(i + 1, team, points) for i, (team, points) in enumerate(result)]
+    conn = db.get_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(query, (season,))
+            result = cursor.fetchall()
 
-    return ranked_result
+            ranked_result = [(i + 1, team, points) for i, (team, points) in enumerate(result)]
+            return ranked_result
+    finally:
+        db.release_connection(conn)
