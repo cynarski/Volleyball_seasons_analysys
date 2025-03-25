@@ -82,12 +82,21 @@ def create_season_table_header():
         html.Span("Lp.", id="place"),
         html.Span("Team", id="team_name"),
         html.Span("Pkt", className="points"),
+        html.Span("Matches", className="points"),
+        html.Span("Sets", className="points"),
+        html.Span("Ratio", className="points"),
     ], className="table-header sticky-header")
 
-def create_season_table(place, team, points):
+def create_season_table(place, team, points, total_matches_won, total_matches_lost, total_sets_won, total_sets_lost, sets_ratio, selected_team=False):
+    formatted_sets_ratio = f"{sets_ratio:.2f}"
+
     return html.Div([
         html.Span(place, className="place"),
         html.Img(src=f"/assets/teams/{team}.png", className="team-logo"),
         html.Span(team, className="team-name"),
         html.Span(points, className="points"),
-    ], className="table")
+        html.Span(f"{total_matches_won} : {total_matches_lost}", className="sets"),
+        html.Span(f"{total_sets_won} : {total_sets_lost}", className="sets"),
+        html.Span(formatted_sets_ratio, className="sets"),
+    ], className=f"table {'selected-team' if selected_team else ''}")
+

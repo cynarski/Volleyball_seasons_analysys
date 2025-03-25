@@ -124,3 +124,29 @@ def get_season_table(season: str) -> List[Tuple[int, str, int]]:
             return ranked_result
     finally:
         db.release_connection(conn)
+
+
+def get_team_sets_stats(team: str, season: str) -> Tuple:
+    query = "SELECT * FROM get_team_sets_stats(%s, %s);"
+
+    conn = db.get_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(query, (team, season))
+            result = cursor.fetchone()
+            return result
+    finally:
+        db.release_connection(conn)
+
+
+def get_matches_results(team: str, season: str) -> Tuple:
+    query = "SELECT * FROM get_matches_results(%s, %s);"
+
+    conn = db.get_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(query, (team, season))
+            result = cursor.fetchone()
+            return result
+    finally:
+        db.release_connection(conn)

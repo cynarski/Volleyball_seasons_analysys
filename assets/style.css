@@ -263,9 +263,31 @@ body {
 }
 
 #team_name {
-    margin-left: 70px;
+    margin-left: 20px;
 }
 
 #place {
     margin-left: 20px;
+}
+
+.sets {
+    padding: 5px;
+}
+
+/*.table {*/
+/*    display: flex;*/
+/*    justify-content: space-between;*/
+/*    align-items: center;*/
+/*}*/
+
+.table .place,
+.table .team-logo,
+.table .team-name,
+.table .points,
+.table .sets {
+    margin-right: 25px;
+}
+
+.selected-team {
+    background-color: #f8d7da;
 }

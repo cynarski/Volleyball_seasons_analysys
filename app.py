@@ -2,7 +2,7 @@ from dash import Dash, html, dcc, Output, Input, no_update
 import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
 
-from db_requests import get_seasons, check_team_in_season, get_matches_for_team_and_season, get_sets_scores, get_home_and_away_stats, get_season_table
+from db_requests import get_seasons, check_team_in_season, get_matches_for_team_and_season, get_sets_scores, get_home_and_away_stats, get_season_table, get_team_sets_stats, get_matches_results
 from layouts import create_header, create_team_dropdown, create_season_dropdown, team_in_season_alert, create_match_card, create_season_table, create_season_table_header
 from utils import format_match_result
 
@@ -336,9 +336,10 @@ def match_results(team, season):
 @app.callback(
     Output('season_list', 'children'),
     Input('season-slider', 'value'),
+    Input('team-dropdown', 'value')
 )
-def season_table(season):
-    if season is None:
+def season_table(season, selected_team_name):
+    if not selected_team_name or season is None:
         return None
 
     seasons = get_seasons()
@@ -351,10 +352,25 @@ def season_table(season):
 
     table_items = [create_season_table_header()]
 
-    table_items.extend([
-        create_season_table(place, team, points)
-        for place, team, points in results
-    ])
+    for place, team, points in results:
+        sets_stats = get_team_sets_stats(team, selected_season)
+
+        matches_stats = get_matches_results(team, selected_season)
+
+        if sets_stats and matches_stats:
+            team_name, total_sets_won, total_sets_lost, sets_ratio = sets_stats
+            total_matches_won, total_matches_lost = matches_stats
+
+
+            table_items.append(create_season_table(
+                place, team, points,
+                total_matches_won=total_matches_won,
+                total_matches_lost=total_matches_lost,
+                total_sets_won=total_sets_won,
+                total_sets_lost=total_sets_lost,
+                sets_ratio=sets_ratio,
+                selected_team=(team == selected_team_name)
+            ))
 
     return html.Div(
         [
