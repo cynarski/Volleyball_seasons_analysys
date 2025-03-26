@@ -1,3 +1,13 @@
+from db_requests import get_seasons, check_team_in_season
+
+def get_selected_season(season_idx):
+    seasons = get_seasons()
+    return seasons[season_idx] if season_idx is not None else None
+
+def is_team_in_season(team, season):
+    return team is not None and season is not None and check_team_in_season(team, season)
+
+
 def format_match_result(match, set_scores, team, round):
     date = match[1]
     team_1_name = match[2]

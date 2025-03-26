@@ -2,7 +2,7 @@ version: "3.9"
 services:
   db:
     build:
-      context: .
+      context: ./database
     restart: always
     container_name: "postgres"
     ports:
@@ -14,7 +14,21 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
 
+  app:
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    restart: always
+    container_name: "dash_app"
+    depends_on:
+      - db
+    ports:
+      - "8050:8050"
+    environment:
+      DATABASE_URL: "postgresql://user:password@postgres:1234/volleyball_app"
+    volumes:
+      - .:/app
+
 volumes:
   pg_data:
     driver: local
-

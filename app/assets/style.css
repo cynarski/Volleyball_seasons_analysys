@@ -1,0 +1,370 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-color: azure;
+}
+
+.card {
+    margin: 10px;
+    padding: 10px;
+    border-radius: 0;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 15px;
+    margin: 5px 10px;
+    height: 50px;
+}
+
+.title p {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    font-weight: bold;
+    font-size: 24px;
+}
+
+.image {
+    height: 50px;
+    object-fit: contain;
+}
+
+#team-dropdown {
+    border: none;
+}
+
+.season-select, .team-selact {
+    padding: 10px;
+    width: 90%;
+}
+
+.team-selact {
+    margin-left: 30px;
+}
+
+.season-select {
+    margin-left: 5px;
+}
+
+.season-select Label, .team-selact Label {
+    font-weight: bold;
+    margin: 0 0 5px 5px;
+}
+
+#team-dropdown {
+    width: 85%;
+}
+
+#pie-chart {
+    width: 90%;
+    box-shadow: 2px 2px 15px rgba(0, 0, 0, 0.1);
+    margin-top: 10px;
+}
+
+#wins-and-losses {
+    width: 93%;
+    margin: 75px 20px 75px 30px;
+    box-shadow: 2px 2px 15px rgba(0, 0, 0, 0.2);
+}
+
+
+.score {
+    font-size: 20px;
+    font-weight: bold;
+    color: black;
+    padding: 5px 10px;
+    margin: 0 5px;
+    text-align: center;
+}
+
+.scrollable-list {
+    max-height: 450px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-left: 10px;
+    margin-top: 10px;
+    width: 90%;
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    scrollbar-width: thin;
+    scrollbar-color: #888 #f1f1f1;
+}
+
+.scrollable-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.scrollable-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 5px;
+}
+
+.scrollable-list::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 5px;
+}
+
+.scrollable-list::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+
+.match {
+  display: grid;
+  grid-template-columns: 3fr 40px 1fr 1fr 40px 3fr;
+  align-items: center;
+  padding: 12px 16px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: white;
+}
+
+.table {
+  display: grid;
+  grid-template-columns: 40px 50px auto 60px;
+  align-items: center;
+  padding: 12px 16px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: white;
+}
+
+.team {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+
+.team.home .team.name {
+  text-align: right;
+  padding-right: 10px;
+}
+
+.team.away {
+  text-align: left;
+  padding-left: 10px;
+}
+
+/* Team logos */
+.team-logo {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+}
+
+.score {
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-align: center;
+  padding: 0 8px;
+  min-width: 30px;
+}
+
+.scrollable-list {
+  max-height: 450px;
+  overflow-y: auto;
+  padding: 10px;
+  border: none;
+  background-color: #f8f9fa;
+  margin-left: 30px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+}
+
+#match_results {
+    width: 90%;
+    box-shadow: 2px 2px 15px rgba(0, 0, 0, 0.1);
+    margin-top: 10px;
+    margin-left: 30px;
+    margin-bottom: 30px;
+}
+
+.place {
+  font-size: 18px;
+  font-weight: bold;
+  text-align: left;
+}
+
+.team-logo {
+  width: 40px;
+  height: 40px;
+}
+
+.team-name {
+  font-weight: bold;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.points {
+  font-weight: bold;
+  text-align: right;
+}
+
+#season_list {
+    width: 100%;
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0.1);
+    margin-top: 10px;
+    margin-left: -30px;
+
+}
+.scrollable-list {
+    position: relative;
+    overflow-y: auto;
+    max-height: 450px;
+    border: 1px solid #eee;
+}
+
+.sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: #f0f0f0;
+    font-weight: bold;
+    border-bottom: 2px solid #ddd;
+}
+
+.table {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.place {
+    width: 40px;
+    text-align: center;
+}
+
+.team-logo, .team-logo-placeholder {
+    width: 30px;
+    margin-right: 10px;
+}
+
+.team-name {
+    flex-grow: 1;
+}
+
+.points {
+    width: 50px;
+    text-align: right;
+    font-weight: bold;
+}
+
+#team_name {
+    margin-left: 30px;
+}
+
+#place {
+    margin-left: 20px;
+}
+
+.sets {
+    padding: 5px;
+}
+
+.table {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.table .place,
+.table .team-logo,
+.table .team-name,
+.table .points,
+.table .sets {
+    margin-right: 25px;
+}
+
+.selected-team {
+    background-color: #f8d7da;
+}
+
+
+
+.table {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 10px;
+}
+
+.table .place {
+    width: 40px;
+    text-align: center;
+}
+
+
+.table .team-name {
+    flex: 2;
+    text-align: left;
+}
+
+.table .points {
+    width: 50px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.table .sets {
+    width: 80px;
+    text-align: center;
+}
+
+.table-header, .table {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 10px;
+}
+
+.table-header {
+    font-weight: bold;
+    background-color: #f1f1f1;
+    border-bottom: 2px solid #ccc;
+}
+
+.table-header .place,
+.table .place {
+    width: 40px;
+    text-align: center;
+}
+
+.table-header .team-name,
+.table .team-name {
+    flex: 2;
+    text-align: left;
+}
+
+.table-header .points,
+.table .points {
+    width: 50px;
+    text-align: center;
+}
+
+.table-header .sets,
+.table .sets {
+    width: 80px;
+    text-align: center;
+}
+
+.sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
