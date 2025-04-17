@@ -6,7 +6,7 @@ services:
     restart: always
     container_name: "postgres"
     ports:
-      - 1234:5432
+      - "5432:5432"
     environment:
       POSTGRES_DB: volleyball_app
       POSTGRES_USER: user
@@ -17,7 +17,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: app/Dockerfile
+      dockerfile: Dockerfile
     restart: always
     container_name: "dash_app"
     depends_on:
@@ -25,11 +25,12 @@ services:
     ports:
       - "8050:8050"
     environment:
-      DATABASE_URL: "postgresql://user:password@postgres:1234/volleyball_app"
+      DATABASE_URL: "postgresql://user:password@db:5432/volleyball_app"
+    working_dir:
+      /app
     volumes:
       - .:/app
 
 volumes:
   pg_data:
     driver: local
-
