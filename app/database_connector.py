@@ -18,8 +18,8 @@ class DatabaseConnector:
                 user='user',
                 password='password',
                 database='volleyball_app',
-                host='db',
-                port=5432,
+                host='localhost',
+                port=1234,
             )
             print("Connected to database with connection pool")
         except Exception as e:

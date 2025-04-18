@@ -13,9 +13,9 @@ class DatabaseChecker:
         self.conn = self.db_connector.get_connection()
         self.tables = ['team', 'season', 'teams_in_season', 'matches', 'match_details', 'matches_extended',
                        'set_scores']
-        self.functions = ['count_home_and_away_stats', 'count_points', 'count_wins_and_loses', 'get_matches_results', 'get_team_sets_stats']
-        self.views = ['teams_in_single_season', 'teams_matches_in_season']
-        self.procedures = ['update_match_type', 'update_points']
+        self.functions = ['Count_home_and_away_stats', 'Count_points', 'Count_wins_and_loses', 'Get_matches_results', 'Get_team_sets_stats']
+        self.views = ['Teams_in_single_season', 'Teams_matches_in_season']
+        self.procedures = ['Update_match_type', 'Update_points']
 
     def check_tables(self):
         cursor = self.conn.cursor()
@@ -37,7 +37,7 @@ class DatabaseChecker:
             count = cursor.fetchone()[0]
             if count == 0:
                 self.logger.warning(f"Table {table} is empty. Executing insert_data.sql.")
-                self.execute_sql_file("../database/insert_data.sql")
+                self.execute_sql_file("insert_data.sql")
             else:
                 self.logger.info(f"Table {table} contains {count} rows.")
 
