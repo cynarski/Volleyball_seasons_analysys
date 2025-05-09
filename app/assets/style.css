@@ -368,3 +368,7 @@ body {
     z-index: 10;
 }
 
+.clickable-card:hover {
+    cursor: pointer;
+    background-color: #f0f0f0;
+}

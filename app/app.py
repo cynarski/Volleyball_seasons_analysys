@@ -1,8 +1,10 @@
-from dash import Dash, html, dcc, Output, Input, no_update
+from dash import Dash, html, dcc, Output, Input, no_update, State
+from dash.dependencies import ALL
 import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
 
-from db_requests import check_team_in_season, get_matches_for_team_and_season, get_sets_scores, get_home_and_away_stats, get_season_table, get_team_sets_stats, get_matches_results
+from db_requests import check_team_in_season, get_matches_for_team_and_season, get_sets_scores, get_home_and_away_stats, \
+    get_season_table, get_team_sets_stats, get_matches_results, get_match_details
 from layouts import create_header, create_team_dropdown, create_season_dropdown, team_in_season_alert, create_match_card, create_season_table, create_season_table_header
 from utils import format_match_result, get_selected_season, get_seasons, is_team_in_season
 
@@ -17,9 +19,16 @@ app.layout = html.Div([
     team_in_season_alert(),
 
     dbc.Row([
-        dbc.Col([html.Div(id="matches", className="equal-height")], width=6),
-        dbc.Col([html.Div(id="pie-chart", className="equal-height")], width=6)
+        dbc.Col([html.Div(id='matches', className='equal-height')], width=6),
+        dbc.Col([html.Div(id="pie-chart", className="equal-height")], width=6),
+        dbc.Col([html.Div(
+            dcc.Graph(
+                id='match-stats',
+                style={'display': 'none'}),
+            className="equal-height")], width=6)
     ]),
+
+
     dbc.Row([
         dbc.Col([dcc.Graph(id="wins-and-losses", className="equal-height", clear_on_unhover=True)], width=12)
     ]),
@@ -65,7 +74,8 @@ def matches_scores(team, season):
     selected_season = get_selected_season(season)
 
     if is_team_in_season(team, selected_season):
-        matches = get_matches_for_team_and_season(team, selected_season)
+        matches = get_matches_for_team_and_season(team, selected_season, match_id=True)
+        print(matches[0])
 
         if not matches:
             return html.P("No matches data", style={"color": "gray"})
@@ -73,13 +83,14 @@ def matches_scores(team, season):
         return html.Div(
             [
                 html.Div(
-                    [
-                        create_match_card(home, away, home_score, away_score)
-                        for home, away, home_score, away_score in matches
-                    ],
-                    className="scrollable-list"
+                    create_match_card(home, away, home_score, away_score),
+                    id={'type': 'match-card', 'index': match_id},
+                    n_clicks_timestamp=-1,
+                    className='clickable-card'
                 )
-            ]
+                for match_id, home, away, home_score, away_score in matches
+            ],
+            className='scrollable-list'
         )
 
     return None
@@ -375,6 +386,49 @@ def season_table(season, selected_team_name):
             )
         ]
     )
+
+
+
+@app.callback(
+    Output('match-stats', 'figure'),
+    Output('match-stats', 'style'),
+    Input({'type': 'match-card', 'index': ALL}, 'n_clicks_timestamp'),
+    State({'type': 'match-card', 'index': ALL}, 'id')
+)
+def display_match_stats(timestamps, ids):
+    if not timestamps or max(timestamps) <= 0:
+        return go.Figure(), {'display': 'none'}
+
+    clicked_idx = timestamps.index(max(timestamps))
+    match_id = ids[clicked_idx]['index']
+
+    details = get_match_details(match_id)
+    categories = ['Aces', 'Blocks', 'Service Errors', 'Attack Errors', 'Attack Efficiency', 'Reception Errors']
+    team1_vals = [
+        details['t1_ace'], details['t1_blocks'],
+        abs(details['t1_srv_sum'] - details['t1_ace']), details['t1_att_err'],
+        details['t1_att_eff'], details['t1_rec_err']
+    ]
+    team2_vals = [
+        details['t2_ace'], details['t2_blocks'],
+        abs(details['t2_srv_sum'] - details['t2_ace']), details['t2_att_err'],
+        details['t2_att_eff'], details['t2_rec_err']
+    ]
+
+    fig = go.Figure()
+    fig.add_trace(go.Bar(x=categories, y=team1_vals, name=details['team1']))
+    fig.add_trace(go.Bar(x=categories, y=team2_vals, name=details['team2']))
+    fig.update_layout(
+        title='Match Statistics Comparison',
+        barmode='group',
+        xaxis_title='Category',
+        yaxis_title='Value',
+        legend_title='Teams',
+        plot_bgcolor='white',
+        height=450
+    )
+
+    return fig, {'display': 'block'}
 
 
 
