@@ -3,8 +3,8 @@ services:
   db:
     build:
       context: ./database
-    restart: always
-    container_name: "postgres"
+      dockerfile: Dockerfile
+    container_name: postgres
     ports:
       - "1234:5432"
     environment:
@@ -14,22 +14,21 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
 
-#  app:
-#    build:
-#      context: .
-#      dockerfile: Dockerfile
-#    restart: always
-#    container_name: "dash_app"
-#    depends_on:
-#      - db
-#    ports:
-#      - "8050:8050"
-#    environment:
-#      DATABASE_URL: "postgresql://user:password@db:5432/volleyball_app"
-#    working_dir:
-#      /app
-#    volumes:
-#      - .:/app
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dash_app
+    depends_on:
+      db:
+        condition: service_started
+    ports:
+      - "8050:8050"
+    environment:
+      - DATABASE_URL=postgresql://user:password@db:5432/volleyball_app
+    working_dir: /app
+    volumes:
+      - .:/app
 
 volumes:
   pg_data:
