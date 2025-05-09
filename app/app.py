@@ -1,10 +1,10 @@
-from dash import Dash, html, dcc, Output, Input, no_update, State
+from dash import Dash, html, dcc, Output, Input, no_update, State, dash_table
 from dash.dependencies import ALL
 import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
 
 from db_requests import check_team_in_season, get_matches_for_team_and_season, get_sets_scores, get_home_and_away_stats, \
-    get_season_table, get_team_sets_stats, get_matches_results, get_match_details
+    get_season_table, get_team_sets_stats, get_matches_results, get_match_details_part, get_match_details_all
 from layouts import create_header, create_team_dropdown, create_season_dropdown, team_in_season_alert, create_match_card, create_season_table, create_season_table_header
 from utils import format_match_result, get_selected_season, get_seasons, is_team_in_season
 
@@ -21,11 +21,11 @@ app.layout = html.Div([
     dbc.Row([
         dbc.Col([html.Div(id='matches', className='equal-height')], width=6),
         dbc.Col([html.Div(id="pie-chart", className="equal-height")], width=6),
-        dbc.Col([html.Div(
-            dcc.Graph(
-                id='match-stats',
-                style={'display': 'none'}),
-            className="equal-height")], width=6)
+    ]),
+
+    dbc.Row([
+        dbc.Col([html.Div(id='match-details', className='equal-height scrollable-list', style={'display': 'none'})], width=6),
+        dbc.Col([dcc.Graph(id='match-details-chart', style={'display': 'none'})], width=6)
     ]),
 
 
@@ -80,18 +80,16 @@ def matches_scores(team, season):
         if not matches:
             return html.P("No matches data", style={"color": "gray"})
 
-        return html.Div(
-            [
-                html.Div(
-                    create_match_card(home, away, home_score, away_score),
-                    id={'type': 'match-card', 'index': match_id},
-                    n_clicks_timestamp=-1,
-                    className='clickable-card'
-                )
-                for match_id, home, away, home_score, away_score in matches
-            ],
-            className='scrollable-list'
-        )
+        cards = []
+        for match_id, home, away, home_score, away_score in matches:
+            card = html.Div(
+                create_match_card(home, away, home_score, away_score),
+                id={'type': 'match-card', 'index': match_id},
+                n_clicks_timestamp=-1,
+                className='clickable-card'
+            )
+            cards.append(card)
+        return html.Div(cards, className='scrollable-list')
 
     return None
 
@@ -388,21 +386,75 @@ def season_table(season, selected_team_name):
     )
 
 
-
 @app.callback(
-    Output('match-stats', 'figure'),
-    Output('match-stats', 'style'),
+    Output('match-details', 'children'),
+    Output('match-details', 'style'),
+    Output('match-details-chart', 'figure'),
+    Output('match-details-chart', 'style'),
     Input({'type': 'match-card', 'index': ALL}, 'n_clicks_timestamp'),
     State({'type': 'match-card', 'index': ALL}, 'id')
 )
-def display_match_stats(timestamps, ids):
+def display_match_details(timestamps, ids):
     if not timestamps or max(timestamps) <= 0:
-        return go.Figure(), {'display': 'none'}
+        return None, {'display': 'none'}, go.Figure(), {'display': 'none'}
 
     clicked_idx = timestamps.index(max(timestamps))
     match_id = ids[clicked_idx]['index']
 
-    details = get_match_details(match_id)
+    details = get_match_details_part(match_id)
+    full_details = get_match_details_all(match_id)
+
+    category_labels = {
+        'score': 'Number of sets won',
+        'sum': 'Total points gained',
+        'bp': 'Points from counterattack',
+        'ratio': 'Points difference',
+        'srv_sum': 'Total serves',
+        'srv_err': 'Serve errors',
+        'srv_ace': 'Aces',
+        'srv_eff': 'Serve effectiveness %',
+        'rec_sum': 'Receptions',
+        'rec_err': 'Reception errors',
+        'rec_pos': 'Positive receptions %',
+        'rec_perf': 'Perfect receptions %',
+        'att_sum': 'Total attacks',
+        'att_err': 'Attack errors',
+        'att_blk': 'Blocked attacks',
+        'att_kill': 'Attack points',
+        'att_kill_perc': 'Attack success %',
+        'att_eff': 'Attack effectiveness %',
+        'blk_sum': 'Block points',
+        'blk_as': 'Block assists',
+    }
+
+    categories = []
+    for key_suffix, label in category_labels.items():
+        t1_key = f"t1_{key_suffix}"
+        t2_key = f"t2_{key_suffix}"
+        if t1_key in full_details and t2_key in full_details:
+            categories.append((label, full_details[t1_key], full_details[t2_key]))
+
+    table_columns = [
+        {'name': 'Category', 'id': 'category'},
+        {'name': full_details['team1'], 'id': 'team1'},
+        {'name': full_details['team2'], 'id': 'team2'}
+    ]
+
+    table_data = [
+        {'category': label, 'team1': t1_val, 'team2': t2_val}
+        for label, t1_val, t2_val in categories
+    ]
+
+    table = dash_table.DataTable(
+        id='match-details-table',
+        columns=table_columns,
+        data=table_data,
+        style_table={'overflowX': 'auto', 'Height': '450px', 'overflowY': 'auto'},
+        style_header={'backgroundColor': 'rgb(230, 230, 230)', 'fontWeight': 'bold'},
+        style_cell={'textAlign': 'center', 'padding': '5px'},
+        row_selectable=False
+    )
+
     categories = ['Aces', 'Blocks', 'Service Errors', 'Attack Errors', 'Attack Efficiency', 'Reception Errors']
     team1_vals = [
         details['t1_ace'], details['t1_blocks'],
@@ -414,21 +466,17 @@ def display_match_stats(timestamps, ids):
         abs(details['t2_srv_sum'] - details['t2_ace']), details['t2_att_err'],
         details['t2_att_eff'], details['t2_rec_err']
     ]
-
     fig = go.Figure()
     fig.add_trace(go.Bar(x=categories, y=team1_vals, name=details['team1']))
     fig.add_trace(go.Bar(x=categories, y=team2_vals, name=details['team2']))
-    fig.update_layout(
-        title='Match Statistics Comparison',
-        barmode='group',
-        xaxis_title='Category',
-        yaxis_title='Value',
-        legend_title='Teams',
-        plot_bgcolor='white',
-        height=450
-    )
+    fig.update_layout(title='Match Statistics Comparison', barmode='group',
+                      xaxis_title='Category', yaxis_title='Value',
+                      legend_title='Teams', plot_bgcolor='white', height=450, width=825)
 
-    return fig, {'display': 'block'}
+    table_style = {'display': 'block', 'marginTop': '1rem'}
+    chart_style = {'display': 'block', 'marginTop': '1rem'}
+
+    return table, table_style, fig, chart_style
 
 
 
