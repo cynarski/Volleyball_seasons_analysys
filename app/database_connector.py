@@ -1,3 +1,4 @@
+import os
 import psycopg2
 from psycopg2 import pool
 
@@ -15,11 +16,11 @@ class DatabaseConnector:
             self.connection_pool = psycopg2.pool.SimpleConnectionPool(
                 minconn=1,
                 maxconn=50,
-                user='user',
-                password='password',
-                database='volleyball_app',
-                host='localhost',
-                port=1234,
+                user=os.getenv("DB_USER", "user"),
+                password=os.getenv("DB_PASSWORD", "password"),
+                database=os.getenv("DB_NAME", "volleyball_app"),
+                host=os.getenv("DB_HOST", "localhost"),
+                port=int(os.getenv("DB_PORT", 5432)),
             )
             print("Connected to database with connection pool")
         except Exception as e:
@@ -29,7 +30,10 @@ class DatabaseConnector:
     def get_connection(self):
         if self.connection_pool is None:
             self._connect()
-        return self.connection_pool.getconn()
+        if self.connection_pool:
+            return self.connection_pool.getconn()
+        else:
+            raise ConnectionError("Connection pool is not available")
 
     def release_connection(self, conn):
         if self.connection_pool and conn:

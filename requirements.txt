@@ -1,8 +1,0 @@
-cryptography
-dash
-dash_bootstrap_components
-numpy
-pandas
-plotly
-psycopg2-binary
-
