@@ -89,3 +89,133 @@ def create_season_table(place, team, points, total_matches_won, total_matches_lo
         html.Span(formatted_sets_ratio, className="sets"),
     ], className=f"table {'selected-team' if selected_team else ''}")
 
+def create_match_stats_table(details):
+
+    print(details)
+    return html.Div([
+        html.Table([
+
+            html.Tr([
+                html.Td(html.Img(src=f"/assets/teams/{details['team1']}.png", style=logo_style()), style=cell_base_style()),
+                html.Td(details['team1'], style=team_name_style(), colSpan=1),
+                html.Td(details['team2'], style=team_name_style(), colSpan=1),
+                html.Td(html.Img(src=f"/assets/teams/{details['team2']}.png", style=logo_style()), style=cell_base_style()),
+            ]),
+
+            html.Tr([
+                html.Td("Serve", colSpan=4, style=section_header_style())
+            ]),
+
+            html.Tr([
+                html.Td(str(int(details['t1_ace'])), style=value_cell_style()),
+                html.Td("Aces", style=label_style(), colSpan=2),
+                html.Td(str(int(details['t2_ace'])), style=value_cell_style())
+            ]),
+
+            html.Tr([
+                html.Td(str(int(details['t1_srv_err'])), style=value_cell_style()),
+                html.Td("Errors", style=label_style(), colSpan=2),
+                html.Td(str(int(details['t2_srv_err'])), style=value_cell_style())
+            ]),
+
+            html.Tr([
+                html.Td("Reception", colSpan=4, style=section_header_style())
+            ]),
+
+            html.Tr([
+                html.Td(f"{str(int(details['t1_rec_pos']))}%", style=value_cell_style()),
+                html.Td("Positive", style=label_style(), colSpan=2),
+                html.Td(f"{str(int(details['t2_rec_pos']))}%", style=value_cell_style())
+            ]),
+
+            html.Tr([
+                html.Td(f"{str(int(details['t1_rec_perf']))}%", style=value_cell_style()),
+                html.Td("Perfection", style=label_style(), colSpan=2),
+                html.Td(f"{str(int(details['t2_rec_perf']))}%", style=value_cell_style())
+            ]),
+
+            html.Tr([
+                html.Td("Attack", colSpan=4, style=section_header_style())
+            ]),
+
+            html.Tr([
+                html.Td(str(int(details['t1_att_err'])), style=value_cell_style()),
+                html.Td("Errors", style=label_style(), colSpan=2),
+                html.Td(str(int(details['t2_att_err'])), style=value_cell_style())
+            ]),
+
+            html.Tr([
+                html.Td(f"{str(int(details['t1_att_perc']))}%", style=value_cell_style()),
+                html.Td("Accuracy", style=label_style(), colSpan=2),
+                html.Td(f"{str(int(details['t2_att_perc']))}%", style=value_cell_style())
+            ]),
+
+            html.Tr([
+                html.Td("Blocks", colSpan=4, style=section_header_style())
+            ]),
+
+            html.Tr([
+                html.Td(str(int(details['t1_blocks'])), style=value_cell_style()),
+                html.Td("Blocks", style=label_style(), colSpan=2),
+                html.Td(str(int(details['t2_blocks'])), style=value_cell_style())
+            ]),
+        ], style={
+            'width': '100%',
+            'borderCollapse': 'collapse',
+            'marginTop': '15px'
+        })
+    ], style={
+        'backgroundColor': 'white',
+        'borderRadius': '10px',
+        'padding': '20px'
+    })
+
+
+def logo_style():
+    return {
+        'height': '40px',
+        'display': 'block',
+        'margin': 'auto'
+    }
+
+def team_name_style():
+    return {
+        'textAlign': 'center',
+        'fontWeight': '600',
+        'fontSize': '18px',
+        'padding': '10px 0'
+    }
+
+def section_header_style():
+    return {
+        'textAlign': 'center',
+        'fontWeight': 'bold',
+        'fontSize': '16px',
+        'padding': '10px 0',
+        'borderTop': '1px solid #ddd',
+        'borderBottom': '1px solid #ddd',
+        'backgroundColor': '#fafafa'
+    }
+
+def value_cell_style():
+    return {
+        'textAlign': 'center',
+        'fontWeight': 'bold',
+        'fontSize': '16px',
+        'padding': '10px 0'
+    }
+
+def label_style():
+    return {
+        'textAlign': 'center',
+        'fontSize': '15px',
+        'color': '#444',
+        'padding': '8px 0'
+    }
+
+def cell_base_style():
+    return {
+        'textAlign': 'center',
+        'padding': '10px'
+    }
+

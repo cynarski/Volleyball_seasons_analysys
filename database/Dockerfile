@@ -10,6 +10,7 @@ COPY functions/Get_teams_sets_stats.sql /docker-entrypoint-initdb.d/
 COPY functions/Get_matches_results.sql /docker-entrypoint-initdb.d/
 COPY views/Teams_in_single_season.sql /docker-entrypoint-initdb.d/
 COPY views/Teams_matches_in_season.sql /docker-entrypoint-initdb.d/
+COPY views/Match_statistic.sql /docker-entrypoint-initdb.d/
 
 COPY insert_data.sql /docker-entrypoint-initdb.d/
 
