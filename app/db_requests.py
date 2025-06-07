@@ -41,7 +41,7 @@ def check_team_in_season(team: str, season: str) -> List[Tuple]:
         db.release_connection(conn)
 
 
-def get_matches_for_team_and_season(team: str, season: str, match_id=False, date=False) -> List[Tuple]:
+def get_matches_for_team_and_season(team: str, season: str, match_id=False, date=False, match_type:str = 'league') -> List[Tuple]:
     fields = []
     if match_id:
         fields.append("id")
@@ -54,7 +54,7 @@ def get_matches_for_team_and_season(team: str, season: str, match_id=False, date
          FROM Teams_matches_in_season
          WHERE (team_1 = %s OR team_2 = %s) 
              AND season = %s 
-             AND match_type = 'league'
+             AND match_type = '{match_type}'
          ORDER BY date;
      """
 
@@ -91,13 +91,13 @@ def get_sets_scores(match_id: int) -> List[Tuple[int, int]]:
         db.release_connection(conn)
 
 
-def get_home_and_away_stats(team: str, season: str) -> Tuple:
-    query = "SELECT * FROM count_home_and_away_stats(%s, %s);"
+def get_home_and_away_stats(team: str, season: str, match_type: str) -> Tuple:
+    query = "SELECT * FROM count_home_and_away_stats(%s, %s, %s);"
 
     conn = db.get_connection()
     try:
         with conn.cursor() as cursor:
-            cursor.execute(query, (team, season))
+            cursor.execute(query, (team, season, match_type))
             result = cursor.fetchone()
             return result
     finally:

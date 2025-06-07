@@ -11,6 +11,16 @@ from layouts import (
 
 def register_callbacks(app):
     @app.callback(
+        Output("filters-collapse", "is_open"),
+        Input("toggle-filters-btn", "n_clicks"),
+        State("filters-collapse", "is_open"),
+        prevent_initial_call=True
+    )
+    def toggle_filters(n, is_open):
+        if n:
+            return not is_open
+        return is_open
+    @app.callback(
         Output("alert", "children"),
         Output("alert", "is_open"),
         Input('team-dropdown', 'value'),
@@ -28,13 +38,16 @@ def register_callbacks(app):
         Output('matches', 'children'),
         Input('team-dropdown', 'value'),
         Input('season-slider', 'value'),
+        Input('match-type-radio', 'value'),
     )
-    def matches_scores(team, season):
+    def matches_scores(team, season, match_types):
+        print(match_types)
         if not team or season is None:
             return None
         selected_season = SeasonService.get_selected_season(season)
         if TeamService.is_team_in_season(team, selected_season):
-            matches = MatchService.get_matches_for_team_and_season(team, selected_season, match_id=True)
+            matches = MatchService.get_matches_for_team_and_season(team, selected_season, match_id=True, match_type=match_types)
+            
             if not matches:
                 return html.P("No matches data", style={"color": "gray"})
             return html.Div(
@@ -55,13 +68,14 @@ def register_callbacks(app):
         Output('pie-chart', 'children'),
         Input('team-dropdown', 'value'),
         Input('season-slider', 'value'),
+        Input('match-type-radio', 'value'),
     )
-    def pie_chart(team, season):
+    def pie_chart(team, season, match_types):
         if not team or season is None:
             return None
         selected_season = SeasonService.get_selected_season(season)
         if TeamService.is_team_in_season(team, selected_season):
-            matches = MatchService.get_matches_for_team_and_season(team, selected_season)
+            matches = MatchService.get_matches_for_team_and_season(team, selected_season, match_type=match_types)
             if not matches:
                 return html.P("Don't have data about matches", style={"color": "gray"})
             wins = sum(1 for match in matches if
@@ -83,12 +97,13 @@ def register_callbacks(app):
         Output('wins-and-losses', 'style'),
         Input('team-dropdown', 'value'),
         Input('season-slider', 'value'),
+        Input('match-type-radio', 'value'),
     )
-    def show_wins_and_losses(team, season):
+    def show_wins_and_losses(team, season, match_types):
         if not team or season is None:
             return go.Figure(), {'display': 'none'}
         selected_season = SeasonService.get_selected_season(season)
-        matches_scores = MatchService.get_matches_for_team_and_season(team, selected_season, match_id=True, date=True)
+        matches_scores = MatchService.get_matches_for_team_and_season(team, selected_season, match_id=True, date=True, match_type=match_types)
         set_scores = [MatchService.get_sets_scores(match[0]) for match in matches_scores]
         formatted_matches = [
             StatsService.format_match_result(match, sets, team, index)
@@ -171,17 +186,18 @@ def register_callbacks(app):
         Output('match_results', 'children'),
         Input('team-dropdown', 'value'),
         Input('season-slider', 'value'),
+        Input('match-type-radio', 'value'),
     )
-    def match_results(team, season):
+    def match_results(team, season, match_types):
         if not team or season is None:
             return None
         selected_season = SeasonService.get_selected_season(season)
         if not TeamService.is_team_in_season(team, selected_season):
             return html.P("This team didn't play in the selected season.", style={"color": "gray"})
-        matches = MatchService.get_matches_for_team_and_season(team, selected_season)
+        matches = MatchService.get_matches_for_team_and_season(team, selected_season, match_type=match_types)
         if not matches:
             return html.P("Don't have data about matches.", style={"color": "gray"})
-        data = StatsService.get_home_and_away_stats(team, selected_season)
+        data = StatsService.get_home_and_away_stats(team, selected_season, match_types)
         if not data or len(data) < 4:
             return html.P("No sufficient data for statistics.", style={"color": "gray"})
         x_labels = ["Home Wins", "Home Losses", "Away Wins", "Away Losses"]
