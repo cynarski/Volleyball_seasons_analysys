@@ -10,11 +10,11 @@ SELECT
 	md.T2_Srv_Ace,
 	md.T2_Srv_Err,
 
-	(md.T1_Rec_pos / md.T1_Rec_sum) * 100 AS T1_Rec_pos,
-	(md.T1_Rec_perf / md.T1_Rec_sum) * 100 AS T1_Rec_perf,
+	md.T1_Rec_pos,
+	md.T1_Rec_perf,
 
-	(md.T2_Rec_pos / md.T2_Rec_sum) * 100 AS T2_Rec_pos,
-	(md.T2_Rec_perf / md.T2_Rec_sum) * 100 AS T2_Rec_perf,
+	md.T2_Rec_pos,
+	md.T2_Rec_perf,
 
 	md.T1_att_err,
 	md.T1_att_kill_perc,
