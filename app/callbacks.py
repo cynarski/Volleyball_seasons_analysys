@@ -3,11 +3,13 @@ from dash.dependencies import ALL
 import dash
 import plotly.graph_objs as go
 from services import (
-    TeamService, MatchService, SeasonService, StatsService
+    TeamService, MatchService, SeasonService, StatsService, BracketService
 )
 from layouts import (
-    create_match_card, create_season_table, create_season_table_header, create_match_stats_table
+    create_match_card, create_season_table, create_season_table_header, create_match_stats_table, create_bracket_layout
 )
+
+# from utils import build_bracket_from_matches
 
 def register_callbacks(app):
     @app.callback(
@@ -41,10 +43,12 @@ def register_callbacks(app):
         Input('match-type-radio', 'value'),
     )
     def matches_scores(team, season, match_types):
-        print(match_types)
         if not team or season is None:
             return None
+        
         selected_season = SeasonService.get_selected_season(season)
+        if not TeamService.is_team_in_season(team, selected_season):
+            return None
         if TeamService.is_team_in_season(team, selected_season):
             matches = MatchService.get_matches_for_team_and_season(team, selected_season, match_id=True, match_type=match_types)
             
@@ -74,6 +78,10 @@ def register_callbacks(app):
         if not team or season is None:
             return None
         selected_season = SeasonService.get_selected_season(season)
+
+        if not TeamService.is_team_in_season(team, selected_season):
+            return None
+
         if TeamService.is_team_in_season(team, selected_season):
             matches = MatchService.get_matches_for_team_and_season(team, selected_season, match_type=match_types)
             if not matches:
@@ -103,6 +111,10 @@ def register_callbacks(app):
         if not team or season is None:
             return go.Figure(), {'display': 'none'}
         selected_season = SeasonService.get_selected_season(season)
+
+        if not TeamService.is_team_in_season(team, selected_season):
+            return go.Figure(), {'display': 'none'}
+
         matches_scores = MatchService.get_matches_for_team_and_season(team, selected_season, match_id=True, date=True, match_type=match_types)
         set_scores = [MatchService.get_sets_scores(match[0]) for match in matches_scores]
         formatted_matches = [
@@ -191,7 +203,12 @@ def register_callbacks(app):
     def match_results(team, season, match_types):
         if not team or season is None:
             return None
+        
         selected_season = SeasonService.get_selected_season(season)
+
+        if not TeamService.is_team_in_season(team, selected_season):
+             return None
+        
         if not TeamService.is_team_in_season(team, selected_season):
             return html.P("This team didn't play in the selected season.", style={"color": "gray"})
         matches = MatchService.get_matches_for_team_and_season(team, selected_season, match_type=match_types)
@@ -266,14 +283,18 @@ def register_callbacks(app):
         return dcc.Graph(figure=fig)
 
     @app.callback(
-        Output('season_list', 'children'),
-        Input('season-slider', 'value'),
-        Input('team-dropdown', 'value')
+    Output('season_list', 'children'),
+    Input('season-slider', 'value'),
+    Input('team-dropdown', 'value')
     )
     def season_table(season, selected_team_name):
         if not selected_team_name or season is None:
             return None
         selected_season = SeasonService.get_selected_season(season)
+
+        if not TeamService.is_team_in_season(selected_team_name, selected_season):
+            return None
+
         results = StatsService.get_season_table(selected_season)
         if not results:
             return html.P("No matches data", style={"color": "gray"})
@@ -334,3 +355,25 @@ def register_callbacks(app):
             'backgroundColor': 'rgba(0,0,0,0.4)'
         }
         return table, modal_style
+    
+    # @app.callback(
+    #     Output("bracket-container", "children"),
+    #     Input("season-slider", "value"),
+    #     Input("match-type-radio", "value"),
+    # )
+    # def show_bracket(season, match_type):
+    #     if match_type == "play-off" and season is not None:
+    #         selected_season = SeasonService.get_selected_season(season)
+    #         # 1. Pobierz 8 najlepszych drużyn (rozstawienie)
+    #         print("Season str",selected_season)
+    #         top_teams = BracketService.get_bracket_teams(selected_season, 8)
+    #         # 2. Pobierz mecze play-off
+    #         matches = BracketService.get_playoff_matches(selected_season)
+    #         print("DEBUG top_teams:", top_teams)
+    #         print("DEBUG matches:", matches)
+    #         # 3. Zbuduj strukturę drabinki na podstawie rozstawienia i wyników
+    #         bracket_data = build_bracket_from_matches(top_teams=top_teams,matches=matches)
+    #         print("DEBUG bracket_data:", bracket_data)
+    #         # 4. Przekaż do layoutu
+    #         return create_bracket_layout(top_teams)
+    #     return None

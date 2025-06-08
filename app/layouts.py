@@ -49,6 +49,42 @@ def create_season_dropdown():
 
     ], className="season-select")
 
+def more_filters():
+    return dbc.Row([
+        dbc.Col([
+            html.Div(
+                [
+                    html.Span("More filters", className="filters-label"),
+                    html.Div(className="filters-line"),
+                    dbc.Button(
+                        html.I(className="fa fa-chevron-down"),
+                        id="toggle-filters-btn",
+                        color="link",
+                        outline=False,
+                        size="sm",
+                        className="filters-arrow-btn"
+                    ),
+                ],
+                className="filters-bar"
+            ),
+            dbc.Collapse(
+                id="filters-collapse",
+                is_open=False,
+                children=[
+                    dbc.RadioItems(
+                        options=[
+                            {"label": "Liga", "value": "league"},
+                            {"label": "Play-off", "value": "play-off"},
+                        ],
+                        value="league",
+                        id="match-type-radio",
+                        inline=True,
+                    )
+                ],
+                className="filters-collapse"
+            ),
+        ], width=12, className="team-selact")
+    ])
 
 def team_in_season_alert():
     return dbc.Alert(id="alert", color="danger", is_open=False)
@@ -170,6 +206,48 @@ def create_match_stats_table(details):
         'padding': '20px'
     })
 
+
+def match(label, team1_seed, team1_name, team1_sets, team2_seed, team2_name, team2_sets, grid_row):
+    return html.Div([
+        html.Div(label, className='match-label-play-off'),
+        html.Div([
+            html.Span(str(team1_seed), className='team-seed-play-off'),
+            html.Span(team1_name, className='team-name-play-off'),
+            html.Span(team1_sets, className='team-sets-play-off'),
+        ], className='team-play-off'),
+        html.Div([
+            html.Span(str(team2_seed), className='team-seed-play-off'),
+            html.Span(team2_name, className='team-name-play-off'),
+            html.Span(team2_sets, className='team-sets-play-off'),
+        ], className='team-play-off'),
+    ], className='match-play-off', style={'gridRow': grid_row})
+
+def create_bracket_layout(top_teams):
+    seeds = {place: name for place, name, _ in top_teams}
+    sets = {place: "" for place in range(1, 9)}  # Uzupełnij jeśli masz wyniki setów
+
+    return html.Div([
+        html.H2("Drabinka turniejowa", style={'textAlign': 'center'}),
+        html.Div([
+            # Ćwierćfinały
+            html.Div([
+                match("Ćwierćfinał", 1, seeds.get(1, ""), sets.get(1, ""), 8, seeds.get(8, ""), sets.get(8, ""), '1'),
+                match("Ćwierćfinał", 2, seeds.get(2, ""), sets.get(2, ""), 7, seeds.get(7, ""), sets.get(7, ""), '3'),
+                match("Ćwierćfinał", 3, seeds.get(3, ""), sets.get(3, ""), 6, seeds.get(6, ""), sets.get(6, ""), '5'),
+                match("Ćwierćfinał", 4, seeds.get(4, ""), sets.get(4, ""), 5, seeds.get(5, ""), sets.get(5, ""), '7'),
+            ], className='round-grid'),
+            # Półfinały
+            html.Div([
+                match("Półfinał", 1, seeds.get(1, ""), "", 4, seeds.get(4, ""), "", '2'),
+                match("Półfinał", 2, seeds.get(2, ""), "", 3, seeds.get(3, ""), "", '6'),
+            ], className='round-grid'),
+            # Finał i mecz o 3. miejsce
+            html.Div([
+                match("Finał", 1, seeds.get(1, ""), "", 2, seeds.get(2, ""), "", '3'),
+                match("Mecz o 3. miejsce", 3, seeds.get(3, ""), "", 4, seeds.get(4, ""), "", '5'),
+            ], className='round-grid'),
+        ], className='bracket-play-off', style={'backgroundColor': '#eafdff'})
+    ])
 
 def logo_style():
     return {

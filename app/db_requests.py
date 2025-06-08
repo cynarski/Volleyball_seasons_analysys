@@ -173,3 +173,33 @@ def get_match_details(match_id: int) -> Dict[str, any]:
             return dict(zip(keys, row))
     finally:
         db.release_connection(conn)
+
+def get_top_teams_in_league(season: str, limit: int = 8):
+    query = "SELECT place, team_name, total_points FROM top_teams_in_league(%s, %s);"
+    conn = db.get_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(query, (season, limit))
+            result = cursor.fetchall()
+            print("DEBUG top_teams_in_league:", result)  # <--- dodaj to
+            return result
+    finally:
+        db.release_connection(conn)
+
+def get_playoff_matches_simple(season):
+    query = """
+        SELECT t1.TeamName, t2.TeamName, m.t1_score, m.t2_score
+        FROM matches m
+        JOIN season s ON m.season = s.id
+        JOIN team t1 ON m.team_1 = t1.id
+        JOIN team t2 ON m.team_2 = t2.id
+        WHERE m.match_type = 'play-off' AND s.season = %s
+        ORDER BY m.id;
+    """
+    conn = db.get_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(query, (season,))
+            return cursor.fetchall()
+    finally:
+        db.release_connection(conn)

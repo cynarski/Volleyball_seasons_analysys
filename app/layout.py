@@ -1,6 +1,6 @@
 from dash import html, dcc
 import dash_bootstrap_components as dbc
-from layouts import create_header, create_team_dropdown, create_season_dropdown, team_in_season_alert
+from layouts import create_header, create_team_dropdown, create_season_dropdown, team_in_season_alert, create_bracket_layout, more_filters
 
 def create_layout():
     return html.Div([
@@ -12,37 +12,10 @@ def create_layout():
         team_in_season_alert(),
 
         dbc.Row([
-            dbc.Col([
-                dbc.Collapse(
-                    id="filters-collapse",
-                    is_open=False,
-                    children=[
-                        dbc.RadioItems(
-                            options=[
-                                {"label": "Liga", "value": "league"},
-                                {"label": "Play-off", "value": "play-off"},
-                            ],
-                            value="league",  # domyślnie liga
-                            id="match-type-radio",
-                            inline=True,
-                        )
-                    ],
-                    style={"transition": "height 0.4s ease"}
-                ),
-                html.Div(
-                    dbc.Button(
-                        html.I(className="fa fa-chevron-down"),
-                        id="toggle-filters-btn",
-                        color="secondary",
-                        outline=True,
-                        size="sm",
-                        style={"marginTop": "5px"}
-                    ),
-                    style={"textAlign": "left"}
-                ),
-            ])
+            more_filters(),
         ]),
-
+        
+    
         dbc.Row([
             dbc.Col([html.Div(id='matches', className='equal-height')], width=6),
             dbc.Col([html.Div(id="pie-chart", className="equal-height")], width=6)
@@ -107,6 +80,7 @@ def create_layout():
                     ]
                 )
             ]
-        )
+        ),
+        html.Div(id="bracket-container"),
     ]
 )

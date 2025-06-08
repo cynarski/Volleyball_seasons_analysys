@@ -1,6 +1,7 @@
 from db_requests import (
     get_matches_for_team_and_season, get_sets_scores, get_home_and_away_stats,
-    get_season_table, get_team_sets_stats, get_matches_results, get_match_details
+    get_season_table, get_team_sets_stats, get_matches_results, get_match_details,
+    get_top_teams_in_league, get_playoff_matches_simple
 )
 from utils import format_match_result, get_selected_season, is_team_in_season
 
@@ -47,3 +48,13 @@ class StatsService:
     @staticmethod
     def format_match_result(match, sets, team, index):
         return format_match_result(match, sets, team, index)
+    
+class BracketService:
+    @staticmethod
+    def get_bracket_teams(season, limit=8):
+        return get_top_teams_in_league(season, limit)
+    
+    @staticmethod
+    def get_playoff_matches(season):
+        return get_playoff_matches_simple(season)
+    
