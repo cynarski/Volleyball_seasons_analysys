@@ -30,8 +30,8 @@ class MatchService:
 
 class StatsService:
     @staticmethod
-    def get_home_and_away_stats(team, season, match_type):
-        return get_home_and_away_stats(team, season, match_type)
+    def get_home_and_away_stats(team, season, match_type, sets_sum):
+        return get_home_and_away_stats(team, season, match_type, sets_sum)
 
     @staticmethod
     def get_season_table(season):

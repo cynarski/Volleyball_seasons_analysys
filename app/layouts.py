@@ -50,6 +50,9 @@ def create_season_dropdown():
     ], className="season-select")
 
 def more_filters():
+    label_style = {'fontWeight': 'bold', 'marginRight': '10px', 'fontSize': '16px'}
+    checklist_style = {'display': 'inline-block', 'marginRight': '10px'}
+
     return dbc.Row([
         dbc.Col([
             html.Div(
@@ -71,20 +74,50 @@ def more_filters():
                 id="filters-collapse",
                 is_open=False,
                 children=[
-                    dbc.RadioItems(
-                        options=[
-                            {"label": "Liga", "value": "league"},
-                            {"label": "Play-off", "value": "play-off"},
-                        ],
-                        value="league",
-                        id="match-type-radio",
-                        inline=True,
-                    )
+                    dbc.Row([
+                        html.Span("Match type:", style=label_style),
+                        dbc.RadioItems(
+                            options=[
+                                {"label": "Liga", "value": "league"},
+                                {"label": "Play-off", "value": "play-off"},
+                            ],
+                            value="league",
+                            id="match-type-radio",
+                            inline=True,
+                            labelStyle=checklist_style,
+                        ),
+                    ], style={'marginTop': '10px', 'alignItems': 'center'}),
+                    dbc.Row([
+                        html.Span("Number of sets:", style=label_style),
+                        dbc.Checklist(
+                            options=[
+                                {'label': '3 sety', 'value': 3},
+                                {'label': '4 sety', 'value': 4},
+                                {'label': '5 setów', 'value': 5},
+                            ],
+                            value=[3,4,5],
+                            id='sets-count-checkbox',
+                            inline=True,
+                            labelStyle=checklist_style,
+                        ),
+                    ], style={'marginTop': '10px', 'alignItems': 'center'}),
                 ],
                 className="filters-collapse"
             ),
         ], width=12, className="team-selact")
     ])
+
+def number_of_sets():
+    return dcc.RadioItems(
+        id='sets-count-radio',
+        options=[
+            {'label': '3 sety', 'value': 3},
+            {'label': '4 sety', 'value': 4},
+            {'label': '5 setów', 'value': 5},
+        ],
+        value=3,  # domyślna wartość
+        labelStyle={'display': 'inline-block', 'margin-right': '10px'}
+    ),
 
 def team_in_season_alert():
     return dbc.Alert(id="alert", color="danger", is_open=False)
@@ -125,6 +158,27 @@ def create_season_table(place, team, points, total_matches_won, total_matches_lo
         html.Span(formatted_sets_ratio, className="sets"),
     ], className=f"table {'selected-team' if selected_team else ''}")
 
+def create_modal():
+    return html.Div(
+        id='modal',
+        className='modal',
+        children=[
+            html.Div(
+                className='modal-content',
+                children=[
+                    html.Button(
+                        "✕",
+                        id='close-modal',
+                        n_clicks=0,
+                        className='close-modal-button'
+                    ),
+                    html.Div(id='match-stats')
+                ]
+            )
+        ]
+    )
+
+# 
 def create_match_stats_table(details):
 
     print(details)

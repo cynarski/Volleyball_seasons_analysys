@@ -2,12 +2,16 @@ from dash import Output, Input, State, no_update, html, dcc
 from dash.dependencies import ALL
 import dash
 import plotly.graph_objs as go
-from services import (
-    TeamService, MatchService, SeasonService, StatsService, BracketService
-)
 from layouts import (
     create_match_card, create_season_table, create_season_table_header, create_match_stats_table, create_bracket_layout
 )
+
+from db_requests import (
+    get_matches_for_team_and_season, get_sets_scores, get_home_and_away_stats,
+    get_season_table, get_team_sets_stats, get_matches_results, get_match_details,
+    get_top_teams_in_league, get_playoff_matches_simple
+)
+from utils import format_match_result, get_selected_season, is_team_in_season
 
 # from utils import build_bracket_from_matches
 
@@ -31,8 +35,8 @@ def register_callbacks(app):
     def show_team(team, season):
         if team is None or season is None:
             return "", False
-        selected_season = SeasonService.get_selected_season(season)
-        if not TeamService.is_team_in_season(team, selected_season):
+        selected_season = get_selected_season(season)
+        if not is_team_in_season(team, selected_season):
             return f"Team {team} did not play at season {selected_season}.", True
         return "", False
 
@@ -41,16 +45,18 @@ def register_callbacks(app):
         Input('team-dropdown', 'value'),
         Input('season-slider', 'value'),
         Input('match-type-radio', 'value'),
+        Input('sets-count-checkbox', 'value'), 
     )
-    def matches_scores(team, season, match_types):
+    def matches_scores(team, season, match_types, sets_sum):
+        print("Sets count checkbox value:", sets_sum)
         if not team or season is None:
             return None
         
-        selected_season = SeasonService.get_selected_season(season)
-        if not TeamService.is_team_in_season(team, selected_season):
+        selected_season = get_selected_season(season)
+        if not is_team_in_season(team, selected_season):
             return None
-        if TeamService.is_team_in_season(team, selected_season):
-            matches = MatchService.get_matches_for_team_and_season(team, selected_season, match_id=True, match_type=match_types)
+        if is_team_in_season(team, selected_season):
+            matches = get_matches_for_team_and_season(team, selected_season, match_id=True, match_type=match_types, sets_sum=sets_sum)
             
             if not matches:
                 return html.P("No matches data", style={"color": "gray"})
@@ -73,17 +79,18 @@ def register_callbacks(app):
         Input('team-dropdown', 'value'),
         Input('season-slider', 'value'),
         Input('match-type-radio', 'value'),
+        Input('sets-count-checkbox', 'value'), 
     )
-    def pie_chart(team, season, match_types):
+    def pie_chart(team, season, match_types, sets_sum):
         if not team or season is None:
             return None
-        selected_season = SeasonService.get_selected_season(season)
+        selected_season = get_selected_season(season)
 
-        if not TeamService.is_team_in_season(team, selected_season):
+        if not is_team_in_season(team, selected_season):
             return None
 
-        if TeamService.is_team_in_season(team, selected_season):
-            matches = MatchService.get_matches_for_team_and_season(team, selected_season, match_type=match_types)
+        if is_team_in_season(team, selected_season):
+            matches = get_matches_for_team_and_season(team, selected_season, match_type=match_types, sets_sum=sets_sum)
             if not matches:
                 return html.P("Don't have data about matches", style={"color": "gray"})
             wins = sum(1 for match in matches if
@@ -106,19 +113,20 @@ def register_callbacks(app):
         Input('team-dropdown', 'value'),
         Input('season-slider', 'value'),
         Input('match-type-radio', 'value'),
+        Input('sets-count-checkbox', 'value'), 
     )
-    def show_wins_and_losses(team, season, match_types):
+    def show_wins_and_losses(team, season, match_types, sets_sum):
         if not team or season is None:
             return go.Figure(), {'display': 'none'}
-        selected_season = SeasonService.get_selected_season(season)
+        selected_season = get_selected_season(season)
 
-        if not TeamService.is_team_in_season(team, selected_season):
+        if not is_team_in_season(team, selected_season):
             return go.Figure(), {'display': 'none'}
 
-        matches_scores = MatchService.get_matches_for_team_and_season(team, selected_season, match_id=True, date=True, match_type=match_types)
-        set_scores = [MatchService.get_sets_scores(match[0]) for match in matches_scores]
+        matches_scores = get_matches_for_team_and_season(team, selected_season, match_id=True, date=True, match_type=match_types, sets_sum=sets_sum)
+        set_scores = [get_sets_scores(match[0]) for match in matches_scores]
         formatted_matches = [
-            StatsService.format_match_result(match, sets, team, index)
+            format_match_result(match, sets, team, index)
             for index, (match, sets) in enumerate(zip(matches_scores, set_scores), start=1)
         ]
         result_map = {"3:0": 5, "3:1": 4, "3:2": 3, "2:3": 2, "1:3": 1, "0:3": 0}
@@ -199,22 +207,23 @@ def register_callbacks(app):
         Input('team-dropdown', 'value'),
         Input('season-slider', 'value'),
         Input('match-type-radio', 'value'),
+        Input('sets-count-checkbox', 'value'), 
     )
-    def match_results(team, season, match_types):
+    def match_results(team, season, match_types, sets_sum):
         if not team or season is None:
             return None
         
-        selected_season = SeasonService.get_selected_season(season)
+        selected_season = get_selected_season(season)
 
-        if not TeamService.is_team_in_season(team, selected_season):
+        if not is_team_in_season(team, selected_season):
              return None
         
-        if not TeamService.is_team_in_season(team, selected_season):
+        if not is_team_in_season(team, selected_season):
             return html.P("This team didn't play in the selected season.", style={"color": "gray"})
-        matches = MatchService.get_matches_for_team_and_season(team, selected_season, match_type=match_types)
+        matches = get_matches_for_team_and_season(team, selected_season, match_type=match_types, sets_sum=sets_sum)
         if not matches:
             return html.P("Don't have data about matches.", style={"color": "gray"})
-        data = StatsService.get_home_and_away_stats(team, selected_season, match_types)
+        data = get_home_and_away_stats(team, selected_season, match_types, sets_sum)
         if not data or len(data) < 4:
             return html.P("No sufficient data for statistics.", style={"color": "gray"})
         x_labels = ["Home Wins", "Home Losses", "Away Wins", "Away Losses"]
@@ -290,18 +299,18 @@ def register_callbacks(app):
     def season_table(season, selected_team_name):
         if not selected_team_name or season is None:
             return None
-        selected_season = SeasonService.get_selected_season(season)
+        selected_season = get_selected_season(season)
 
-        if not TeamService.is_team_in_season(selected_team_name, selected_season):
+        if not is_team_in_season(selected_team_name, selected_season):
             return None
 
-        results = StatsService.get_season_table(selected_season)
+        results = get_season_table(selected_season)
         if not results:
             return html.P("No matches data", style={"color": "gray"})
         table_items = [create_season_table_header()]
         for place, team, points in results:
-            sets_stats = StatsService.get_team_sets_stats(team, selected_season)
-            matches_stats = StatsService.get_matches_results(team, selected_season)
+            sets_stats = get_team_sets_stats(team, selected_season)
+            matches_stats = get_matches_results(team, selected_season)
             if sets_stats and matches_stats:
                 team_name, total_sets_won, total_sets_lost, sets_ratio = sets_stats
                 total_matches_won, total_matches_lost = matches_stats
@@ -339,7 +348,7 @@ def register_callbacks(app):
             return no_update, {'display': 'none'}
         clicked_idx = timestamps.index(max(timestamps))
         match_id = ids[clicked_idx]['index']
-        details = MatchService.get_match_details(match_id)
+        details = get_match_details(match_id)
         details['team1_logo'] = f"/assets/logos/{details['team1']}.png"
         details['team2_logo'] = f"/assets/logos/{details['team2']}.png"
         table = create_match_stats_table(details)

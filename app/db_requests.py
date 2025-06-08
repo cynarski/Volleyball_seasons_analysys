@@ -41,7 +41,14 @@ def check_team_in_season(team: str, season: str) -> List[Tuple]:
         db.release_connection(conn)
 
 
-def get_matches_for_team_and_season(team: str, season: str, match_id=False, date=False, match_type:str = 'league') -> List[Tuple]:
+def get_matches_for_team_and_season(
+    team: str,
+    season: str,
+    match_id=False,
+    date=False,
+    match_type: str = 'league',
+    sets_sum: List = [3, 4, 5]
+) -> List[Tuple]:
     fields = []
     if match_id:
         fields.append("id")
@@ -49,19 +56,25 @@ def get_matches_for_team_and_season(team: str, season: str, match_id=False, date
         fields.append("date")
     fields.extend(["team_1", "team_2", "T1_score", "T2_score"])
 
+    # Przygotuj odpowiednią liczbę placeholderów dla sets_sum
+    sets_placeholders = ','.join(['%s'] * len(sets_sum))
+
     query = f"""
          SELECT {", ".join(fields)}
          FROM Teams_matches_in_season
-         WHERE (team_1 = %s OR team_2 = %s) 
-             AND season = %s 
-             AND match_type = '{match_type}'
+         WHERE (team_1 = %s OR team_2 = %s)
+             AND season = %s
+             AND match_type = %s
+             AND COALESCE(t1_score,0) + COALESCE(t2_score,0) IN ({sets_placeholders})
          ORDER BY date;
      """
+
+    params = [team, team, season, match_type] + sets_sum
 
     conn = db.get_connection()
     try:
         with conn.cursor() as cursor:
-            cursor.execute(query, (team, team, season))
+            cursor.execute(query, params)
             return cursor.fetchall()
     finally:
         db.release_connection(conn)
@@ -91,13 +104,13 @@ def get_sets_scores(match_id: int) -> List[Tuple[int, int]]:
         db.release_connection(conn)
 
 
-def get_home_and_away_stats(team: str, season: str, match_type: str) -> Tuple:
-    query = "SELECT * FROM count_home_and_away_stats(%s, %s, %s);"
+def get_home_and_away_stats(team: str, season: str, match_type: str, sets_sum: List = [3,4,5]) -> Tuple:
+    query = "SELECT * FROM count_home_and_away_stats(%s, %s, %s, %s);"
 
     conn = db.get_connection()
     try:
         with conn.cursor() as cursor:
-            cursor.execute(query, (team, season, match_type))
+            cursor.execute(query, (team, season, match_type, sets_sum))
             result = cursor.fetchone()
             return result
     finally:
@@ -168,8 +181,6 @@ def get_match_details(match_id: int) -> Dict[str, any]:
                     't1_att_err', 't1_att_perc', 't2_att_err', 't2_att_perc',
                     't1_blocks', 't2_blocks']
 
-
-            print(dict(zip(keys, row)))
             return dict(zip(keys, row))
     finally:
         db.release_connection(conn)
