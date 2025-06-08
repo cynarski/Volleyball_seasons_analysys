@@ -1,7 +1,7 @@
 from dash import  html, dcc
 import dash_bootstrap_components as dbc
 
-from db_requests import get_teams_name, get_seasons
+from db_requests import db_requests
 
 def create_header():
     return dbc.Card([
@@ -17,7 +17,7 @@ def create_header():
     ], className="card")
 
 def create_team_dropdown():
-    team_options = get_teams_name()
+    team_options = db_requests.get_teams_name()
 
     return dbc.Col([
         dbc.Row(html.Label("Select a team to review")),
@@ -32,7 +32,7 @@ def create_team_dropdown():
     ], className="team-selact")
 
 def create_season_dropdown():
-    seasons = get_seasons()
+    seasons = db_requests.get_seasons()
 
     marks = {idx: season for idx, season in enumerate(seasons)}
     return dbc.Col([
@@ -97,6 +97,20 @@ def more_filters():
                             ],
                             value=[3,4,5],
                             id='sets-count-checkbox',
+                            inline=True,
+                            labelStyle=checklist_style,
+                        ),
+                    ], style={'marginTop': '10px', 'alignItems': 'center'}),
+                    dbc.Row([
+                        html.Span("Location:", style=label_style),
+                        dbc.RadioItems(
+                            options=[
+                                {"label": "All", "value": "All"},
+                                {"label": "Home", "value": "Home"},
+                                {"label": "Away", "value": "Away"},
+                            ],
+                            value="All",
+                            id="venue-radio",
                             inline=True,
                             labelStyle=checklist_style,
                         ),

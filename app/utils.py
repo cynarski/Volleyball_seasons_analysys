@@ -1,11 +1,20 @@
-from db_requests import get_seasons, check_team_in_season
+from db_requests import db_requests
+
 
 def get_selected_season(season_idx):
-    seasons = get_seasons()
+    seasons = db_requests.get_seasons()
     return seasons[season_idx] if season_idx is not None else None
 
 def is_team_in_season(team, season):
-    return team is not None and season is not None and check_team_in_season(team, season)
+    return team is not None and season is not None and db_requests.check_team_in_season(team, season)
+
+def validate_team_and_season(team, season):
+    if not team or season is None:
+        return None
+    selected_season = get_selected_season(season)
+    if not is_team_in_season(team, selected_season):
+        return None
+    return selected_season
 
 
 def format_match_result(match, set_scores, team, round):

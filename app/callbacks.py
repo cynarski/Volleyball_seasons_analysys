@@ -2,20 +2,18 @@ from dash import Output, Input, State, no_update, html, dcc
 from dash.dependencies import ALL
 import dash
 import plotly.graph_objs as go
-from layouts import (
-    create_match_card, create_season_table, create_season_table_header, create_match_stats_table, create_bracket_layout
-)
 
-from db_requests import (
-    get_matches_for_team_and_season, get_sets_scores, get_home_and_away_stats,
-    get_season_table, get_team_sets_stats, get_matches_results, get_match_details,
-    get_top_teams_in_league, get_playoff_matches_simple
-)
-from utils import format_match_result, get_selected_season, is_team_in_season
+from layouts import create_match_card, create_season_table, create_season_table_header, create_match_stats_table, create_bracket_layout
 
-# from utils import build_bracket_from_matches
+from utils import format_match_result, get_selected_season, is_team_in_season, validate_team_and_season
+
+from db_requests import db_requests
+
+
 
 def register_callbacks(app):
+
+
     @app.callback(
         Output("filters-collapse", "is_open"),
         Input("toggle-filters-btn", "n_clicks"),
@@ -26,6 +24,7 @@ def register_callbacks(app):
         if n:
             return not is_open
         return is_open
+
     @app.callback(
         Output("alert", "children"),
         Output("alert", "is_open"),
@@ -33,46 +32,40 @@ def register_callbacks(app):
         Input('season-slider', 'value'),
     )
     def show_team(team, season):
-        if team is None or season is None:
-            return "", False
         selected_season = get_selected_season(season)
+        if not team or season is None:
+            return "", False
         if not is_team_in_season(team, selected_season):
             return f"Team {team} did not play at season {selected_season}.", True
         return "", False
-
+    
     @app.callback(
         Output('matches', 'children'),
         Input('team-dropdown', 'value'),
         Input('season-slider', 'value'),
         Input('match-type-radio', 'value'),
         Input('sets-count-checkbox', 'value'), 
+        Input('venue-radio', 'value'),
     )
-    def matches_scores(team, season, match_types, sets_sum):
-        print("Sets count checkbox value:", sets_sum)
-        if not team or season is None:
+    def matches_scores(team, season, match_type, sets_sum, location):
+        selected_season = validate_team_and_season(team, season)
+        if not selected_season:
             return None
-        
-        selected_season = get_selected_season(season)
-        if not is_team_in_season(team, selected_season):
-            return None
-        if is_team_in_season(team, selected_season):
-            matches = get_matches_for_team_and_season(team, selected_season, match_id=True, match_type=match_types, sets_sum=sets_sum)
-            
-            if not matches:
-                return html.P("No matches data", style={"color": "gray"})
-            return html.Div(
-                [
-                    html.Div(
-                        create_match_card(home, away, home_score, away_score),
-                        id={'type': 'match-card', 'index': match_id},
-                        n_clicks_timestamp=-1,
-                        className='clickable-card'
-                    )
-                    for match_id, home, away, home_score, away_score in matches
-                ],
-                className='scrollable-list'
-            )
-        return None
+        matches = db_requests.get_matches_for_team_and_season(team, selected_season, match_id=True, match_type=match_type, sets_sum=sets_sum, location=location)
+        if not matches:
+            return html.P("No matches data", style={"color": "gray"})
+        return html.Div(
+            [
+                html.Div(
+                    create_match_card(home, away, home_score, away_score),
+                    id={'type': 'match-card', 'index': match_id},
+                    n_clicks_timestamp=-1,
+                    className='clickable-card'
+                )
+                for match_id, home, away, home_score, away_score in matches
+            ],
+            className='scrollable-list'
+        )
 
     @app.callback(
         Output('pie-chart', 'children'),
@@ -80,32 +73,27 @@ def register_callbacks(app):
         Input('season-slider', 'value'),
         Input('match-type-radio', 'value'),
         Input('sets-count-checkbox', 'value'), 
+        Input('venue-radio', 'value'),
     )
-    def pie_chart(team, season, match_types, sets_sum):
-        if not team or season is None:
+    def pie_chart(team, season, match_type, sets_sum, location):
+        selected_season = validate_team_and_season(team, season)
+        if not selected_season:
             return None
-        selected_season = get_selected_season(season)
-
-        if not is_team_in_season(team, selected_season):
-            return None
-
-        if is_team_in_season(team, selected_season):
-            matches = get_matches_for_team_and_season(team, selected_season, match_type=match_types, sets_sum=sets_sum)
-            if not matches:
-                return html.P("Don't have data about matches", style={"color": "gray"})
-            wins = sum(1 for match in matches if
-                       (match[0] == team and match[2] > match[3]) or (match[1] == team and match[3] > match[2]))
-            losses = len(matches) - wins
-            fig = go.Figure(
-                data=[go.Pie(
-                    labels=["Wins", "Losses"],
-                    values=[wins, losses],
-                    marker=dict(colors=["#1f77b4", "#ff7f0e"]),
-                )]
-            )
-            fig.update_layout(title=f"Wyniki {team} w sezonie {selected_season}")
-            fig.update_layout(height=450)
-            return dcc.Graph(figure=fig)
+        matches = db_requests.get_matches_for_team_and_season(team, selected_season, match_type=match_type, sets_sum=sets_sum, location=location)
+        if not matches:
+            return html.P("Don't have data about matches", style={"color": "gray"})
+        wins = sum(1 for match in matches if
+                   (match[0] == team and match[2] > match[3]) or (match[1] == team and match[3] > match[2]))
+        losses = len(matches) - wins
+        fig = go.Figure(
+            data=[go.Pie(
+                labels=["Wins", "Losses"],
+                values=[wins, losses],
+                marker=dict(colors=["#1f77b4", "#ff7f0e"]),
+            )]
+        )
+        fig.update_layout(title=f"Wyniki {team} w sezonie {selected_season}", height=450)
+        return dcc.Graph(figure=fig)
 
     @app.callback(
         Output('wins-and-losses', 'figure'),
@@ -114,17 +102,14 @@ def register_callbacks(app):
         Input('season-slider', 'value'),
         Input('match-type-radio', 'value'),
         Input('sets-count-checkbox', 'value'), 
+        Input('venue-radio', 'value'),
     )
-    def show_wins_and_losses(team, season, match_types, sets_sum):
-        if not team or season is None:
+    def show_wins_and_losses(team, season, match_type, sets_sum, location):
+        selected_season = validate_team_and_season(team, season)
+        if not selected_season:
             return go.Figure(), {'display': 'none'}
-        selected_season = get_selected_season(season)
-
-        if not is_team_in_season(team, selected_season):
-            return go.Figure(), {'display': 'none'}
-
-        matches_scores = get_matches_for_team_and_season(team, selected_season, match_id=True, date=True, match_type=match_types, sets_sum=sets_sum)
-        set_scores = [get_sets_scores(match[0]) for match in matches_scores]
+        matches_scores = db_requests.get_matches_for_team_and_season(team, selected_season, match_id=True, date=True, match_type=match_type, sets_sum=sets_sum, location=location)
+        set_scores = [db_requests.get_sets_scores(match[0]) for match in matches_scores]
         formatted_matches = [
             format_match_result(match, sets, team, index)
             for index, (match, sets) in enumerate(zip(matches_scores, set_scores), start=1)
@@ -159,7 +144,7 @@ def register_callbacks(app):
             showlegend=False
         )
         return fig, {'display': 'block'}
-
+    
     @app.callback(
         Output("graph-tooltip", "show"),
         Output("graph-tooltip", "bbox"),
@@ -208,22 +193,17 @@ def register_callbacks(app):
         Input('season-slider', 'value'),
         Input('match-type-radio', 'value'),
         Input('sets-count-checkbox', 'value'), 
+        Input('venue-radio', 'value'),
     )
-    def match_results(team, season, match_types, sets_sum):
-        if not team or season is None:
+    def match_results(team, season, match_type, sets_sum, location):
+        print(f"location: {location}")
+        selected_season = validate_team_and_season(team, season)
+        if not selected_season:
             return None
-        
-        selected_season = get_selected_season(season)
-
-        if not is_team_in_season(team, selected_season):
-             return None
-        
-        if not is_team_in_season(team, selected_season):
-            return html.P("This team didn't play in the selected season.", style={"color": "gray"})
-        matches = get_matches_for_team_and_season(team, selected_season, match_type=match_types, sets_sum=sets_sum)
+        matches = db_requests.get_matches_for_team_and_season(team, selected_season, match_type=match_type, sets_sum=sets_sum, location=location)
         if not matches:
             return html.P("Don't have data about matches.", style={"color": "gray"})
-        data = get_home_and_away_stats(team, selected_season, match_types, sets_sum)
+        data = db_requests.get_home_and_away_stats(team, selected_season, match_type, sets_sum, location=location)
         if not data or len(data) < 4:
             return html.P("No sufficient data for statistics.", style={"color": "gray"})
         x_labels = ["Home Wins", "Home Losses", "Away Wins", "Away Losses"]
@@ -291,26 +271,25 @@ def register_callbacks(app):
         )
         return dcc.Graph(figure=fig)
 
+
     @app.callback(
-    Output('season_list', 'children'),
-    Input('season-slider', 'value'),
-    Input('team-dropdown', 'value')
+        Output('season_list', 'children'),
+        Input('season-slider', 'value'),
+        Input('team-dropdown', 'value')
     )
     def season_table(season, selected_team_name):
         if not selected_team_name or season is None:
             return None
         selected_season = get_selected_season(season)
-
         if not is_team_in_season(selected_team_name, selected_season):
             return None
-
-        results = get_season_table(selected_season)
+        results = db_requests.get_season_table(selected_season)
         if not results:
             return html.P("No matches data", style={"color": "gray"})
         table_items = [create_season_table_header()]
         for place, team, points in results:
-            sets_stats = get_team_sets_stats(team, selected_season)
-            matches_stats = get_matches_results(team, selected_season)
+            sets_stats = db_requests.get_team_sets_stats(team, selected_season)
+            matches_stats = db_requests.get_matches_results(team, selected_season)
             if sets_stats and matches_stats:
                 team_name, total_sets_won, total_sets_lost, sets_ratio = sets_stats
                 total_matches_won, total_matches_lost = matches_stats
@@ -341,14 +320,14 @@ def register_callbacks(app):
         prevent_initial_call=True
     )
     def display_match_stats(timestamps, close_click, ids):
-        ctx =dash.callback_context
+        ctx = dash.callback_context
         if ctx.triggered and ctx.triggered[0]['prop_id'].startswith('close-modal'):
             return no_update, {'display': 'none'}
         if not timestamps or max(timestamps) <= 0:
             return no_update, {'display': 'none'}
         clicked_idx = timestamps.index(max(timestamps))
         match_id = ids[clicked_idx]['index']
-        details = get_match_details(match_id)
+        details = db_requests.get_match_details(match_id)
         details['team1_logo'] = f"/assets/logos/{details['team1']}.png"
         details['team2_logo'] = f"/assets/logos/{details['team2']}.png"
         table = create_match_stats_table(details)
@@ -364,25 +343,3 @@ def register_callbacks(app):
             'backgroundColor': 'rgba(0,0,0,0.4)'
         }
         return table, modal_style
-    
-    # @app.callback(
-    #     Output("bracket-container", "children"),
-    #     Input("season-slider", "value"),
-    #     Input("match-type-radio", "value"),
-    # )
-    # def show_bracket(season, match_type):
-    #     if match_type == "play-off" and season is not None:
-    #         selected_season = SeasonService.get_selected_season(season)
-    #         # 1. Pobierz 8 najlepszych drużyn (rozstawienie)
-    #         print("Season str",selected_season)
-    #         top_teams = BracketService.get_bracket_teams(selected_season, 8)
-    #         # 2. Pobierz mecze play-off
-    #         matches = BracketService.get_playoff_matches(selected_season)
-    #         print("DEBUG top_teams:", top_teams)
-    #         print("DEBUG matches:", matches)
-    #         # 3. Zbuduj strukturę drabinki na podstawie rozstawienia i wyników
-    #         bracket_data = build_bracket_from_matches(top_teams=top_teams,matches=matches)
-    #         print("DEBUG bracket_data:", bracket_data)
-    #         # 4. Przekaż do layoutu
-    #         return create_bracket_layout(top_teams)
-    #     return None
