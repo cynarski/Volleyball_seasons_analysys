@@ -1,6 +1,5 @@
 from dash import  html, dcc
 import dash_bootstrap_components as dbc
-
 from db_requests import db_requests
 
 def create_header():
@@ -49,6 +48,56 @@ def create_season_dropdown():
 
     ], className="season-select")
 
+def create_match_type_filter(label_style, checklist_style):
+    return dbc.Row([
+        html.Span("Match type:", style=label_style),
+        dbc.RadioItems(
+            options=[
+                {"label": "Liga", "value": "league"},
+                {"label": "Play-off", "value": "play-off"},
+            ],
+            value="league",
+            id="match-type-radio",
+            inline=True,
+            labelStyle=checklist_style,
+        ),
+    ], style={'marginTop': '10px', 'alignItems': 'center'})
+
+
+def create_sets_filter(label_style, checklist_style):
+    return dbc.Row([
+        html.Span("Number of sets:", style=label_style),
+        dbc.Checklist(
+            options=[
+                {'label': '3 sety', 'value': 3},
+                {'label': '4 sety', 'value': 4},
+                {'label': '5 setów', 'value': 5},
+            ],
+            value=[3, 4, 5],
+            id='sets-count-checkbox',
+            inline=True,
+            labelStyle=checklist_style,
+        ),
+    ], style={'marginTop': '10px', 'alignItems': 'center'})
+
+
+def create_location_filter(label_style, checklist_style):
+    return dbc.Row([
+        html.Span("Location:", style=label_style),
+        dbc.RadioItems(
+            options=[
+                {"label": "All", "value": "All"},
+                {"label": "Home", "value": "Home"},
+                {"label": "Away", "value": "Away"},
+            ],
+            value="All",
+            id="venue-radio",
+            inline=True,
+            labelStyle=checklist_style,
+        ),
+    ], style={'marginTop': '10px', 'alignItems': 'center'})
+
+
 def more_filters():
     label_style = {'fontWeight': 'bold', 'marginRight': '10px', 'fontSize': '16px'}
     checklist_style = {'display': 'inline-block', 'marginRight': '10px'}
@@ -74,53 +123,14 @@ def more_filters():
                 id="filters-collapse",
                 is_open=False,
                 children=[
-                    dbc.Row([
-                        html.Span("Match type:", style=label_style),
-                        dbc.RadioItems(
-                            options=[
-                                {"label": "Liga", "value": "league"},
-                                {"label": "Play-off", "value": "play-off"},
-                            ],
-                            value="league",
-                            id="match-type-radio",
-                            inline=True,
-                            labelStyle=checklist_style,
-                        ),
-                    ], style={'marginTop': '10px', 'alignItems': 'center'}),
-                    dbc.Row([
-                        html.Span("Number of sets:", style=label_style),
-                        dbc.Checklist(
-                            options=[
-                                {'label': '3 sety', 'value': 3},
-                                {'label': '4 sety', 'value': 4},
-                                {'label': '5 setów', 'value': 5},
-                            ],
-                            value=[3,4,5],
-                            id='sets-count-checkbox',
-                            inline=True,
-                            labelStyle=checklist_style,
-                        ),
-                    ], style={'marginTop': '10px', 'alignItems': 'center'}),
-                    dbc.Row([
-                        html.Span("Location:", style=label_style),
-                        dbc.RadioItems(
-                            options=[
-                                {"label": "All", "value": "All"},
-                                {"label": "Home", "value": "Home"},
-                                {"label": "Away", "value": "Away"},
-                            ],
-                            value="All",
-                            id="venue-radio",
-                            inline=True,
-                            labelStyle=checklist_style,
-                        ),
-                    ], style={'marginTop': '10px', 'alignItems': 'center'}),
+                    create_match_type_filter(label_style, checklist_style),
+                    create_sets_filter(label_style, checklist_style),
+                    create_location_filter(label_style, checklist_style),
                 ],
                 className="filters-collapse"
             ),
         ], width=12, className="team-selact")
     ])
-
 def number_of_sets():
     return dcc.RadioItems(
         id='sets-count-radio',
@@ -192,7 +202,6 @@ def create_modal():
         ]
     )
 
-# 
 def create_match_stats_table(details):
 
     print(details)
@@ -273,49 +282,6 @@ def create_match_stats_table(details):
         'borderRadius': '10px',
         'padding': '20px'
     })
-
-
-def match(label, team1_seed, team1_name, team1_sets, team2_seed, team2_name, team2_sets, grid_row):
-    return html.Div([
-        html.Div(label, className='match-label-play-off'),
-        html.Div([
-            html.Span(str(team1_seed), className='team-seed-play-off'),
-            html.Span(team1_name, className='team-name-play-off'),
-            html.Span(team1_sets, className='team-sets-play-off'),
-        ], className='team-play-off'),
-        html.Div([
-            html.Span(str(team2_seed), className='team-seed-play-off'),
-            html.Span(team2_name, className='team-name-play-off'),
-            html.Span(team2_sets, className='team-sets-play-off'),
-        ], className='team-play-off'),
-    ], className='match-play-off', style={'gridRow': grid_row})
-
-def create_bracket_layout(top_teams):
-    seeds = {place: name for place, name, _ in top_teams}
-    sets = {place: "" for place in range(1, 9)}  # Uzupełnij jeśli masz wyniki setów
-
-    return html.Div([
-        html.H2("Drabinka turniejowa", style={'textAlign': 'center'}),
-        html.Div([
-            # Ćwierćfinały
-            html.Div([
-                match("Ćwierćfinał", 1, seeds.get(1, ""), sets.get(1, ""), 8, seeds.get(8, ""), sets.get(8, ""), '1'),
-                match("Ćwierćfinał", 2, seeds.get(2, ""), sets.get(2, ""), 7, seeds.get(7, ""), sets.get(7, ""), '3'),
-                match("Ćwierćfinał", 3, seeds.get(3, ""), sets.get(3, ""), 6, seeds.get(6, ""), sets.get(6, ""), '5'),
-                match("Ćwierćfinał", 4, seeds.get(4, ""), sets.get(4, ""), 5, seeds.get(5, ""), sets.get(5, ""), '7'),
-            ], className='round-grid'),
-            # Półfinały
-            html.Div([
-                match("Półfinał", 1, seeds.get(1, ""), "", 4, seeds.get(4, ""), "", '2'),
-                match("Półfinał", 2, seeds.get(2, ""), "", 3, seeds.get(3, ""), "", '6'),
-            ], className='round-grid'),
-            # Finał i mecz o 3. miejsce
-            html.Div([
-                match("Finał", 1, seeds.get(1, ""), "", 2, seeds.get(2, ""), "", '3'),
-                match("Mecz o 3. miejsce", 3, seeds.get(3, ""), "", 4, seeds.get(4, ""), "", '5'),
-            ], className='round-grid'),
-        ], className='bracket-play-off', style={'backgroundColor': '#eafdff'})
-    ])
 
 def logo_style():
     return {

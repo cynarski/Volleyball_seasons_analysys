@@ -3,7 +3,7 @@ from dash.dependencies import ALL
 import dash
 import plotly.graph_objs as go
 
-from layouts import create_match_card, create_season_table, create_season_table_header, create_match_stats_table, create_bracket_layout
+from layouts import create_match_card, create_season_table, create_season_table_header, create_match_stats_table
 
 from utils import format_match_result, get_selected_season, is_team_in_season, validate_team_and_season
 
@@ -196,7 +196,6 @@ def register_callbacks(app):
         Input('venue-radio', 'value'),
     )
     def match_results(team, season, match_type, sets_sum, location):
-        print(f"location: {location}")
         selected_season = validate_team_and_season(team, season)
         if not selected_season:
             return None
@@ -310,6 +309,7 @@ def register_callbacks(app):
                 )
             ]
         )
+    
 
     @app.callback(
         Output('match-stats', 'children'),
@@ -343,3 +343,4 @@ def register_callbacks(app):
             'backgroundColor': 'rgba(0,0,0,0.4)'
         }
         return table, modal_style
+        

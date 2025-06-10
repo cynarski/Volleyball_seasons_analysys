@@ -127,8 +127,21 @@ class DbRequests:
         return dict(zip(keys, row)) if row else {}
 
     def get_top_teams_in_league(self, season: str, limit: int = 8):
-        query = "SELECT place, team_name, total_points FROM top_teams_in_league(%s, %s);"
-        return self._fetchall(query, (season, limit))
+        # query = "SELECT place, team_name, total_points FROM top_teams_in_league(%s, %s);"
+        query = """
+             SELECT 
+                 t.TeamName,
+                 COALESCE(cp.points, 0) AS total_points
+             FROM Teams_in_single_season t
+             LEFT JOIN LATERAL Count_points(t.TeamName, t.season) AS cp ON true
+             WHERE season = %s
+             ORDER BY total_points DESC
+             LIMIT %s;
+         """
+        result = self._fetchall(query, (season,limit))
+        ranked_result = [(i + 1, team, points) for i, (team, points) in enumerate(result)]
+
+        return ranked_result
 
     def get_playoff_matches_simple(self, season):
         query = """

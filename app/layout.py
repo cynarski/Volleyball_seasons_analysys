@@ -1,7 +1,7 @@
 from dash import html, dcc
 import dash_bootstrap_components as dbc
 from layouts import (create_header, create_team_dropdown, create_season_dropdown, team_in_season_alert, 
-                     create_bracket_layout, more_filters, create_modal, number_of_sets)
+                     more_filters, create_modal)
 
 def create_layout():
     return html.Div([
@@ -35,6 +35,5 @@ def create_layout():
 
         create_modal(),
 
-        html.Div(id="bracket-container"),
     ]
 )
