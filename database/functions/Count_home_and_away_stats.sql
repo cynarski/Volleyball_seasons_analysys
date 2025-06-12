@@ -1,5 +1,13 @@
-CREATE OR REPLACE FUNCTION count_home_and_away_stats(p_team character varying, p_season character varying, p_match_type character varying, p_sets_sum integer[], p_location character varying DEFAULT 'All'::character varying)
+CREATE OR REPLACE FUNCTION count_home_and_away_stats(
+    p_team character varying,
+    p_season character varying,
+    p_match_type character varying,
+    p_sets_sum integer[],
+    p_location character varying DEFAULT 'All'::character varying
+)
 RETURNS TABLE(wins_home bigint, losses_home bigint, wins_away bigint, losses_away bigint)
+LANGUAGE plpgsql
+AS $$
 BEGIN
     RETURN QUERY
     SELECT
@@ -17,4 +25,4 @@ BEGIN
             OR (p_location = 'Away' AND team_2 = p_team)
           );
 END;
-$$ LANGUAGE plpgsql
+$$;
